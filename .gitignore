@@ -13,3 +13,6 @@ Saved
 *.suo
 *.xcodeproj
 *.xcworkspace
+
+# RiderLink
+/Plugins/Developer/RiderLink
