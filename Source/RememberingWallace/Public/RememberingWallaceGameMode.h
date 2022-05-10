@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+
 #include "RememberingWallaceGameMode.generated.h"
 
 UCLASS(minimalapi)
@@ -14,6 +15,3 @@ class ARememberingWallaceGameMode : public AGameModeBase
 public:
 	ARememberingWallaceGameMode();
 };
-
-
-
