@@ -1,1 +1,8 @@
 * text=auto eol=lf
+
+###############################
+### Files to track with LFS ###
+###############################
+
+# GKnight character model for the player character
+/Content/Characters/GKnight/ filter=lfs diff=lfs merge=lfs -text
