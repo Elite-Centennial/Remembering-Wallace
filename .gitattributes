@@ -6,3 +6,5 @@
 
 # GKnight character model for the player character
 /Content/Characters/GKnight/** filter=lfs diff=lfs merge=lfs -text
+# Textures for the medieval castle
+/Content/RememberingWallace/Medieval_Environment/**/Textures/** filter=lfs diff=lfs merge=lfs -text
