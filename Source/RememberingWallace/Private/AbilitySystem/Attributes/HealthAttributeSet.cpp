@@ -3,6 +3,7 @@
 #include "AbilitySystem/Attributes/HealthAttributeSet.h"
 
 #include "GameplayEffectExtension.h"
+#include "AbilitySystem/GameplayEventHelper.h"
 #include "AbilitySystem/GameplayEventTags.h"
 
 UHealthAttributeSet::UHealthAttributeSet()
@@ -59,8 +60,13 @@ void UHealthAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 		// Send DidDamage and Damaged gameplay events
 		// Keep the event data as we might need to send OutOfHealth event
 		FGameplayEventData EventData;
-		SendGameplayEventToSourceAndTarget(
-			&Data, GTag_Event_Combat_DidDamage, GTag_Event_Combat_Damaged, IncomingDamage, &EventData);
+		RememberingWallace::GameplayEvent::SendEventsForAttrGEExecute(
+			&Data,
+			GetOwningAbilitySystemComponentChecked(),
+			GTag_Event_Combat_DidDamage,
+			GTag_Event_Combat_Damaged,
+			IncomingDamage,
+			&EventData);
 
 		// Exit early if the new health is above zero
 		if (GetHealth() > 0.0f)
@@ -101,7 +107,12 @@ void UHealthAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 		SetHealth(GetHealth() + IncomingHeal);
 
 		// Send DidHeal and Healed gameplay events
-		SendGameplayEventToSourceAndTarget(&Data, GTag_Event_Combat_DidHeal, GTag_Event_Combat_Healed, IncomingHeal);
+		RememberingWallace::GameplayEvent::SendEventsForAttrGEExecute(
+			&Data,
+			GetOwningAbilitySystemComponentChecked(),
+			GTag_Event_Combat_DidHeal,
+			GTag_Event_Combat_Healed,
+			IncomingHeal);
 
 		// Update the flag with the current value in case the value changed due to the event
 		SetOutOfHealth();
@@ -115,21 +126,7 @@ void UHealthAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute
 {
 	Super::PreAttributeChange(Attribute, NewValue);
 
-	if (Attribute == GetMaxHealthAttribute())
-	{
-		// Max health should never go below 1.0
-		NewValue = FMath::Max(NewValue, 1.0f);
-	}
-	else if (Attribute == GetDefenseAttribute())
-	{
-		// Defense should never be negative
-		NewValue = FMath::Max(NewValue, 0.0f);
-	}
-	else if (Attribute == GetDamageAttribute() || Attribute == GetHealAttribute())
-	{
-		// Damage and heal should never be negative
-		NewValue = FMath::Max(NewValue, 0.0f);
-	}
+	ClampNewAttributeValue(Attribute, NewValue);
 }
 
 // This is called after a change in the current value of the attribute is applied. We can adjust values of other
@@ -155,6 +152,19 @@ void UHealthAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attri
 {
 	Super::PreAttributeBaseChange(Attribute, NewValue);
 
+	ClampNewAttributeValue(Attribute, NewValue);
+}
+
+// This is called after the change to the base value is applied. This is a const function, so we can't really make any
+// changes.
+void UHealthAttributeSet::PostAttributeBaseChange(
+	const FGameplayAttribute& Attribute, const float OldValue, const float NewValue) const
+{
+	Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
+}
+
+void UHealthAttributeSet::ClampNewAttributeValue(const FGameplayAttribute& Attribute, float& NewValue) const
+{
 	if (Attribute == GetHealthAttribute())
 	{
 		// Health should be between 0.0 and max health
@@ -175,52 +185,4 @@ void UHealthAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attri
 		// Damage and heal should never be negative
 		NewValue = FMath::Max(NewValue, 0.0f);
 	}
-}
-
-// This is called after the change to the base value is applied. This is a const function, so we can't really make any
-// changes.
-void UHealthAttributeSet::PostAttributeBaseChange(
-	const FGameplayAttribute& Attribute, const float OldValue, const float NewValue) const
-{
-	Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
-}
-
-void UHealthAttributeSet::SendGameplayEventToSourceAndTarget(
-	const FGameplayEffectModCallbackData* Data,
-	const FGameplayTag& TagForSource,
-	const FGameplayTag& TagForTarget,
-	const float Magnitude,
-	FGameplayEventData* OutEventData) const
-{
-	// Prepare the place to store the data in case the pointer is null
-	FGameplayEventData EventData;
-
-	if (!OutEventData)
-	{
-		// The pointer is null, so point it to the place we prepared above
-		OutEventData = &EventData;
-	}
-
-	// We're going to use these to populate the event data
-	const FGameplayEffectContextHandle& Context = Data->EffectSpec.GetEffectContext();
-	UAbilitySystemComponent* InstigatorASC = Context.GetOriginalInstigatorAbilitySystemComponent();
-
-	// Populate data into the event data struct
-	OutEventData->Instigator = Context.GetOriginalInstigator();
-	OutEventData->Target = Data->Target.GetAvatarActor() ? Data->Target.GetAvatarActor() : Data->Target.GetOwnerActor();
-	OutEventData->ContextHandle = Context;
-	OutEventData->EventMagnitude = Magnitude;
-	Data->Target.GetOwnedGameplayTags(OutEventData->TargetTags);
-
-	if (InstigatorASC)
-	{
-		// Populate rest of the info and send the event to the source
-		InstigatorASC->GetOwnedGameplayTags(OutEventData->InstigatorTags);
-		OutEventData->EventTag = TagForSource;
-		InstigatorASC->HandleGameplayEvent(TagForSource, OutEventData);
-	}
-
-	// Change the tag and send the event to the target, which is the owner of this instance
-	OutEventData->EventTag = TagForTarget;
-	GetOwningAbilitySystemComponentChecked()->HandleGameplayEvent(TagForTarget, OutEventData);
 }

@@ -28,3 +28,8 @@ REMEMBERINGWALLACE_API DECLARE_GAMEPLAY_TAG(GTag_Event_Combat_DidHeal);
  * Tag for event when the unit's health goes down to zero
  */
 REMEMBERINGWALLACE_API DECLARE_GAMEPLAY_TAG(GTag_Event_Unit_OutOfHealth);
+
+/**
+ * Tag for event when the unit's mana goes down to zero
+ */
+REMEMBERINGWALLACE_API DECLARE_GAMEPLAY_TAG(GTag_Event_Unit_OutOfMana);
