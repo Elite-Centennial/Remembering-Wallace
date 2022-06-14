@@ -2,6 +2,7 @@
 
 #include "ItemInstance.h"
 
+#include "InventorySystem.h"
 #include "ItemDefinition.h"
 #include "ItemProperty.h"
 #include "ItemProperty_Stack.h"
@@ -35,10 +36,10 @@ FItemPropertyData* UItemInstance::GetInstanceData(const TSubclassOf<UItemPropert
 	return DataPtr ? DataPtr->Get() : nullptr;
 }
 
-uint32 UItemInstance::GetMaxStackCount() const
+int64 UItemInstance::GetMaxStackCount() const
 {
 	const FItemPropertyData_Stack* StackData = GetInstanceData<UItemProperty_Stack>();
-	return StackData ? StackData->MaxStackCount : 1;
+	return StackData ? StackData->MaxStackCount : InventorySystem::GMaxStackCountDefault;
 }
 
 bool UItemInstance::CanStackWith(const UItemInstance* Other) const

@@ -9,5 +9,5 @@ namespace InventorySystem
 	/**
 	 * The default value for the max stack count in the inventory system
 	 */
-	extern const uint32 GMaxStackCountDefault;
+	extern const int64 GMaxStackCountDefault;
 }

@@ -3,4 +3,4 @@
 #include "InventorySystem.h"
 
 // ReSharper disable once CppVariableCanBeMadeConstexpr
-const uint32 InventorySystem::GMaxStackCountDefault = 1;
+const int64 InventorySystem::GMaxStackCountDefault = 1;

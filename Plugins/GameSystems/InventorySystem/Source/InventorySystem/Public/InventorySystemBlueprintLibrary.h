@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InventoryComponent.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "InventorySystemBlueprintLibrary.generated.h"
@@ -17,6 +16,9 @@ class INVENTORYSYSTEM_API UInventorySystemBlueprintLibrary : public UBlueprintFu
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
-	static int64 GetStackCount(const FInventorySlot& InventorySlot);
+	/**
+	 * Get the default value for max stack count
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory|Stack")
+	static int64 GetDefaultMaxStackCount();
 };

@@ -27,7 +27,7 @@ const UItemProperty* UItemDefinition::GetPropertyByClass(
 	return nullptr;
 }
 
-uint32 UItemDefinition::GetMaxStackCount() const
+int64 UItemDefinition::GetMaxStackCount() const
 {
 	const UItemProperty_Stack* StackProperty = GetProperty<UItemProperty_Stack>();
 	return StackProperty ? StackProperty->GetMaxStackCount() : InventorySystem::GMaxStackCountDefault;

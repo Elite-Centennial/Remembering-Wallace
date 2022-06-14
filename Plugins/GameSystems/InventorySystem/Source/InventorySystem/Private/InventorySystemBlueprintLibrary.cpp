@@ -2,7 +2,9 @@
 
 #include "InventorySystemBlueprintLibrary.h"
 
-int64 UInventorySystemBlueprintLibrary::GetStackCount(const FInventorySlot& InventorySlot)
+#include "InventorySystem.h"
+
+int64 UInventorySystemBlueprintLibrary::GetDefaultMaxStackCount()
 {
-	return InventorySlot.StackCount;
+	return InventorySystem::GMaxStackCountDefault;
 }

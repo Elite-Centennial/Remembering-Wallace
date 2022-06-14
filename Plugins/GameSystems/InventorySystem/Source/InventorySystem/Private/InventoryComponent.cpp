@@ -5,6 +5,12 @@
 #include "InventorySystemLog.h"
 #include "ItemDefinition.h"
 
+FInventorySlot::FInventorySlot(UItemInstance* InInstance, const int64 InStackCount)
+	: Instance(InInstance),
+	  StackCount(FMath::Max<int64>(InStackCount, 0))
+{
+}
+
 bool FInventorySlot::CanStackInstance(const UItemInstance* InstanceToStack, const uint32 CountToStack) const
 {
 	check(InstanceToStack);
@@ -26,7 +32,7 @@ bool FInventorySlot::CanStackAmount(const uint32 CountToStack) const
 	return CountToStack == 0 || Instance->GetMaxStackCount() - StackCount >= CountToStack;
 }
 
-FInventorySlot& FInventory::AddSlot(UItemInstance* Instance, const uint32 StackCount)
+FInventorySlot& FInventory::AddSlot(UItemInstance* Instance, const int64 StackCount)
 {
 	check(Instance);
 
@@ -34,7 +40,7 @@ FInventorySlot& FInventory::AddSlot(UItemInstance* Instance, const uint32 StackC
 	return Slots.Emplace_GetRef(Instance, StackCount);
 }
 
-void FInventory::RemoveSlotAt(const uint32 IndexToRemove)
+void FInventory::RemoveSlotAt(const int32 IndexToRemove)
 {
 	if (static_cast<int64>(IndexToRemove) >= Slots.Num())
 	{
@@ -47,7 +53,7 @@ void FInventory::RemoveSlotAt(const uint32 IndexToRemove)
 	Slots.RemoveAt(IndexToRemove);
 }
 
-void FInventory::AddSlotCount(const FGameplayTag& ItemTag, const uint32 AmountToAdd)
+void FInventory::AddSlotCount(const FGameplayTag& ItemTag, const uint16 AmountToAdd)
 {
 	// Prevent the entry from being added if the amount to add is zero
 	if (AmountToAdd == 0)
@@ -56,11 +62,11 @@ void FInventory::AddSlotCount(const FGameplayTag& ItemTag, const uint32 AmountTo
 	}
 
 	// Automatically insert a new entry if the one for the given tag didn't exist
-	uint32& Count = ItemSlotCount.FindOrAdd(ItemTag);
+	uint16& Count = ItemSlotCount.FindOrAdd(ItemTag);
 	Count += AmountToAdd;
 }
 
-bool FInventory::SubtractSlotCount(const FGameplayTag& ItemTag, const uint32 AmountToSubtract)
+bool FInventory::SubtractSlotCount(const FGameplayTag& ItemTag, const uint16 AmountToSubtract)
 {
 	// Don't do anything if the amount to subtract is zero
 	if (AmountToSubtract == 0)
@@ -71,9 +77,9 @@ bool FInventory::SubtractSlotCount(const FGameplayTag& ItemTag, const uint32 Amo
 	bool bHadEnoughCount = false;
 
 	// Check if an entry exists for the given item tag
-	if (uint32* CountPtr = ItemSlotCount.Find(ItemTag))
+	if (uint16* CountPtr = ItemSlotCount.Find(ItemTag))
 	{
-		uint32& Count = *CountPtr;
+		uint16& Count = *CountPtr;
 		bHadEnoughCount = Count >= AmountToSubtract;
 		Count -= FMath::Min(AmountToSubtract, Count);
 
@@ -92,17 +98,18 @@ UInventoryComponent::UInventoryComponent(const FObjectInitializer& ObjectInitial
 {
 }
 
-bool UInventoryComponent::HasInstance(const UItemInstance* Instance, uint32 Count) const
+bool UInventoryComponent::HasInstance(const UItemInstance* Instance, int64 Count) const
 {
-	if (Count == 0)
-	{
-		return true;
-	}
-
 	// Check existence
-	if (!Inventory.HasItem(Instance->GetDefinition()))
+	if (Count < 0 || !Inventory.HasItem(Instance->GetDefinition()))
 	{
 		return false;
+	}
+
+	// Existence is checked; return true if Count is 0 or 1
+	if (Count < 2)
+	{
+		return true;
 	}
 
 	// Go through the inventory array
@@ -129,22 +136,18 @@ bool UInventoryComponent::HasInstance(const UItemInstance* Instance, uint32 Coun
 	return false;
 }
 
-bool UInventoryComponent::BP_HasInstance(const UItemInstance* Instance, const int64 Count) const
+bool UInventoryComponent::HasDefinition(const UItemDefinition* Definition, int64 Count) const
 {
-	return Count >= 0 && HasInstance(Instance, Count);
-}
-
-bool UInventoryComponent::HasDefinition(const UItemDefinition* Definition, uint32 Count) const
-{
-	if (Count == 0)
-	{
-		return true;
-	}
-
 	// Check existence
-	if (!Inventory.HasItem(Definition))
+	if (Count < 0 || !Inventory.HasItem(Definition))
 	{
 		return false;
+	}
+
+	// Existence is checked; return true if Count is 0 or 1
+	if (Count < 2)
+	{
+		return true;
 	}
 
 	// Go through the inventory array
@@ -171,22 +174,18 @@ bool UInventoryComponent::HasDefinition(const UItemDefinition* Definition, uint3
 	return false;
 }
 
-bool UInventoryComponent::BP_HasDefinition(const UItemDefinition* Definition, const int64 Count) const
+bool UInventoryComponent::HasItemTag(const FGameplayTag& ItemTag, int64 Count) const
 {
-	return Count >= 0 && HasDefinition(Definition, Count);
-}
-
-bool UInventoryComponent::HasItemTag(const FGameplayTag& ItemTag, uint32 Count) const
-{
-	if (Count == 0)
-	{
-		return true;
-	}
-
 	// Check existence
-	if (!Inventory.HasItem(ItemTag))
+	if (Count < 0 || !Inventory.HasItem(ItemTag))
 	{
 		return false;
+	}
+
+	// Existence is checked; return true if Count is 0 or 1
+	if (Count < 2)
+	{
+		return true;
 	}
 
 	// Go through the inventory array
@@ -213,27 +212,22 @@ bool UInventoryComponent::HasItemTag(const FGameplayTag& ItemTag, uint32 Count) 
 	return false;
 }
 
-bool UInventoryComponent::BP_HasItemTag(const FGameplayTag& ItemTag, const int64 Count) const
-{
-	return Count >= 0 && HasItemTag(ItemTag, Count);
-}
-
 void UInventoryComponent::AddInstanceInit(const FItemInstanceInit& InstanceInit)
 {
 	Inventory.AddSlot(UItemInstance::CreateFromInstanceInit(InstanceInit, GetOwner()), InstanceInit.StackCount);
 }
 
-void UInventoryComponent::AddInstance(UItemInstance* Instance, uint32 Count)
+void UInventoryComponent::AddInstance(UItemInstance* Instance, int64 Count)
 {
 	check(Instance);
 
-	// In case zero is passed in, don't do anything
-	if (Count == 0)
+	// In case a non-positive value is passed in, don't do anything
+	if (Count <= 0)
 	{
 		return;
 	}
 
-	const uint32 MaxStackCount = Instance->GetMaxStackCount();
+	const int64 MaxStackCount = Instance->GetMaxStackCount();
 
 	// Go through the inventory to add to the existing slots if stacking is supported and there is at least 1 slot with
 	// the same item
@@ -286,22 +280,17 @@ void UInventoryComponent::AddInstance(UItemInstance* Instance, uint32 Count)
 	}
 }
 
-void UInventoryComponent::BP_AddInstance(UItemInstance* Instance, const int64 Count)
-{
-	AddInstance(Instance, FMath::Max<int64>(Count, 0));
-}
-
-void UInventoryComponent::AddDefinition(const UItemDefinition* Definition, uint32 Count)
+void UInventoryComponent::AddDefinition(const UItemDefinition* Definition, int64 Count)
 {
 	check(Definition);
 
-	// In case zero is passed in, don't do anything
-	if (Count == 0)
+	// In case a non-positive value is passed in, don't do anything
+	if (Count <= 0)
 	{
 		return;
 	}
 
-	const uint32 MaxStackCount = Definition->GetMaxStackCount();
+	const int64 MaxStackCount = Definition->GetMaxStackCount();
 	UItemInstance* Instance = nullptr;
 
 	// Go through the inventory to add to the existing slots if stacking is supported and there is at least 1 slot with
@@ -352,14 +341,9 @@ void UInventoryComponent::AddDefinition(const UItemDefinition* Definition, uint3
 	}
 }
 
-void UInventoryComponent::BP_AddDefinition(const UItemDefinition* Definition, const int64 Count)
+UItemInstance* UInventoryComponent::RemoveInstance(const UItemInstance* Instance, int64 Count)
 {
-	AddDefinition(Definition, FMath::Max<int64>(Count, 0));
-}
-
-UItemInstance* UInventoryComponent::RemoveInstance(const UItemInstance* Instance, uint32 Count)
-{
-	if (Count == 0)
+	if (Count <= 0)
 	{
 		return nullptr;
 	}
@@ -403,14 +387,9 @@ UItemInstance* UInventoryComponent::RemoveInstance(const UItemInstance* Instance
 	return RemovedInstance;
 }
 
-UItemInstance* UInventoryComponent::BP_RemoveInstance(const UItemInstance* Instance, const int64 Count)
+UItemInstance* UInventoryComponent::RemoveDefinition(const UItemDefinition* Definition, int64 Count)
 {
-	return RemoveInstance(Instance, FMath::Max<int64>(Count, 0));
-}
-
-UItemInstance* UInventoryComponent::RemoveDefinition(const UItemDefinition* Definition, uint32 Count)
-{
-	if (Count == 0)
+	if (Count <= 0)
 	{
 		return nullptr;
 	}
@@ -454,24 +433,15 @@ UItemInstance* UInventoryComponent::RemoveDefinition(const UItemDefinition* Defi
 	return RemovedInstance;
 }
 
-UItemInstance* UInventoryComponent::BP_RemoveDefinition(const UItemDefinition* Definition, const int64 Count)
+FInventorySlot UInventoryComponent::RemoveSlotAt(const int32 Index)
 {
-	return RemoveDefinition(Definition, FMath::Max<int64>(Count, 0));
-}
-
-FInventorySlot UInventoryComponent::RemoveSlotAt(const uint32 IndexToRemove)
-{
-	if (static_cast<int64>(IndexToRemove) >= Inventory.GetSlots().Num())
+	// Ensure the index is not out of bounds of the array
+	if (Index < 0 || Index >= Inventory.GetSlots().Num())
 	{
 		return FInventorySlot();
 	}
 
-	FInventorySlot Slot = Inventory.GetSlots()[IndexToRemove];
-	Inventory.RemoveSlotAt(IndexToRemove);
+	FInventorySlot Slot = Inventory.GetSlots()[Index];
+	Inventory.RemoveSlotAt(Index);
 	return Slot;
-}
-
-FInventorySlot UInventoryComponent::BP_RemoveSlotAt(const int64 Index)
-{
-	return Index >= 0 ? RemoveSlotAt(Index) : FInventorySlot();
 }

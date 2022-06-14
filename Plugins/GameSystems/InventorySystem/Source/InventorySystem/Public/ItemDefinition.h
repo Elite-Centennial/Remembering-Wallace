@@ -60,13 +60,14 @@ public:
 	/**
 	 * Return the maximum number of amount the item can be stacked in one inventory slot
 	 */
-	uint32 GetMaxStackCount() const;
+	int64 GetMaxStackCount() const;
 
 protected:
 	/**
 	 * The unique identifiable tag associated with this item
 	 *
-	 * We use this when doing equality checks on item types.
+	 * We use this when doing equality checks on item types. The tags must take the form of "ItemDef.Item.<Something>"
+	 * where the "Something" can be several levels of child tags.
 	 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "BaseProperty", meta = (Categories = "ItemDef.Item"))
 	FGameplayTag AssociatedTag;

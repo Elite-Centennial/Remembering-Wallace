@@ -33,13 +33,7 @@ public:
 	/**
 	 * Return the max stack count
 	 */
-	uint32 GetMaxStackCount() const { return MaxStackCount; }
-
-	/**
-	 * Return the max stack count as a type supported by BP
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, DisplayName = "Get Max Stack Count")
-	int64 BP_GetMaxStackCount() const { return MaxStackCount; }
+	int64 GetMaxStackCount() const { return MaxStackCount; }
 
 	/**
 	 * Whether the two instances with the given property data can be stacked
@@ -61,8 +55,8 @@ protected:
 	/**
 	 * Maximum number for stacking
 	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Config")
-	uint32 MaxStackCount;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config")
+	int64 MaxStackCount;
 
 	/**
 	 * Whether default new instances can be stacked
@@ -96,8 +90,8 @@ struct INVENTORYSYSTEM_API FItemPropertyData_Stack : public FItemPropertyData
 	/**
 	 * Maximum number for stacking, saved for easy access
 	 */
-	UPROPERTY(VisibleInstanceOnly, Category = "Stack")
-	uint32 MaxStackCount = InventorySystem::GMaxStackCountDefault;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stack")
+	int64 MaxStackCount = InventorySystem::GMaxStackCountDefault;
 
 	// BEGIN FItemPropertyData interface
 	virtual UScriptStruct* GetScriptStruct() const override { return StaticStruct(); }

@@ -3,14 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ItemProperty.h"
 #include "UObject/Object.h"
 
 #include "ItemInstance.generated.h"
 
 class UInventoryComponent;
 class UItemDefinition;
-class UItemProperty;
-struct FItemPropertyData;
 
 /**
  * Data for manually instantiating items
@@ -31,8 +30,8 @@ struct INVENTORYSYSTEM_API FItemInstanceInit
 	/**
 	 * The stack count if the item is stackable in inventories
 	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
-	uint32 StackCount = 1;
+	UPROPERTY(EditDefaultsOnly, Category = "Stack", meta = (ClampMin = "1", UIMin = "1"))
+	int64 StackCount = 1;
 };
 
 /**
@@ -98,7 +97,7 @@ public:
 	 *
 	 * If stacking is not supported, this returns 1.
 	 */
-	uint32 GetMaxStackCount() const;
+	int64 GetMaxStackCount() const;
 
 	/**
 	 * Whether this instance can be stacked with the given instance

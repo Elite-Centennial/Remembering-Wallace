@@ -22,10 +22,7 @@ struct INVENTORYSYSTEM_API FInventorySlot
 	/**
 	 * Convenience constructor
 	 */
-	FInventorySlot(UItemInstance* InInstance = nullptr, const uint32 InStackCount = 0)
-		: Instance(InInstance), StackCount(InStackCount)
-	{
-	}
+	explicit FInventorySlot(UItemInstance* InInstance = nullptr, const int64 InStackCount = 0);
 
 	/**
 	 * Copy constructor
@@ -43,8 +40,8 @@ struct INVENTORYSYSTEM_API FInventorySlot
 	/**
 	 * The number of items stacked in this slot
 	 */
-	UPROPERTY(VisibleAnywhere)
-	uint32 StackCount;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int64 StackCount;
 
 	/**
 	 * Whether ths data is in a valid state (having an item instance assigned and a positive stack count)
@@ -103,12 +100,12 @@ struct INVENTORYSYSTEM_API FInventory
 	/**
 	 * Add a slot to the inventory
 	 */
-	FInventorySlot& AddSlot(UItemInstance* Instance, uint32 StackCount);
+	FInventorySlot& AddSlot(UItemInstance* Instance, int64 StackCount);
 
 	/**
 	 * Remove a slot at the given index of the array
 	 */
-	void RemoveSlotAt(uint32 IndexToRemove);
+	void RemoveSlotAt(int32 IndexToRemove);
 
 protected:
 	/**
@@ -116,7 +113,7 @@ protected:
 	 *
 	 * Do NOT directly modify this field.
 	 */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Inventory")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Slots;
 
 	// TODO: More performant way to organize the inventory
@@ -124,13 +121,13 @@ protected:
 	/**
 	 * Cached map of how many slots each item type is taking up in the inventory
 	 */
-	TMap<FGameplayTag, uint32> ItemSlotCount;
+	TMap<FGameplayTag, uint16> ItemSlotCount;
 
 private:
 	/**
 	 * Add the given amount to the number of slots saved in ItemSlotCount
 	 */
-	void AddSlotCount(const FGameplayTag& ItemTag, uint32 AmountToAdd = 1);
+	void AddSlotCount(const FGameplayTag& ItemTag, uint16 AmountToAdd = 1);
 
 	/**
 	 * Subtract the given amount from the number of slots saved in ItemSlotCount
@@ -138,7 +135,7 @@ private:
 	 * Returns false if there was not enough amount to fully subtract the given amount, but the subtraction still takes
 	 * place.
 	 */
-	bool SubtractSlotCount(const FGameplayTag& ItemTag, uint32 AmountToSubtract = 1);
+	bool SubtractSlotCount(const FGameplayTag& ItemTag, uint16 AmountToSubtract = 1);
 };
 
 /**
@@ -166,46 +163,29 @@ public:
 	/**
 	 * Whether the inventory contains the given amount of items that can be stacked with the given item instance
 	 *
-	 * Specifying 0 for Count results in always returning true.
+	 * Specifying 0 or 1 for Count results in only checking the existence. A negative Count value results in returning
+	 * false.
 	 */
-	bool HasInstance(const UItemInstance* Instance, uint32 Count = 1) const;
-
-	/**
-	 * Whether the inventory contains the given amount of items that can be stacked with the given item instance
-	 *
-	 * Specifying 0 for Count results in always returning true. A negative Count value results in returning false.
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory", DisplayName = "Has Instance")
-	bool BP_HasInstance(const UItemInstance* Instance, int64 Count = 1) const;
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	bool HasInstance(const UItemInstance* Instance, int64 Count = 1) const;
 
 	/**
 	 * Whether the inventory contains the given amount of items that can be stacked with the given item definition
 	 *
-	 * Specifying 0 for Count results in always returning true.
+	 * Specifying 0 or 1 for Count results in only checking the existence. A negative Count value results in returning
+	 * false.
 	 */
-	bool HasDefinition(const UItemDefinition* Definition, uint32 Count = 1) const;
-
-	/**
-	 * Whether the inventory contains the given amount of items that can be stacked with the given item definition
-	 *
-	 * Specifying 0 for Count results in always returning true. A negative Count value results in returning false.
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory", DisplayName = "Has Definition")
-	bool BP_HasDefinition(const UItemDefinition* Definition, int64 Count = 1) const;
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	bool HasDefinition(const UItemDefinition* Definition, int64 Count = 1) const;
 
 	/**
 	 * Whether the inventory contains the given amount of items with the given item tag
 	 *
-	 * Specifying 0 for Count results in always returning true.
+	 * Specifying 0 or 1 for Count results in only checking the existence. A negative Count value results in returning
+	 * false.
 	 */
-	bool HasItemTag(const FGameplayTag& ItemTag, uint32 Count = 1) const;
-	/**
-	 * Whether the inventory contains the given amount of items with the given item tag
-	 *
-	 * Specifying 0 for Count results in always returning true. A negative Count value results in returning false.
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory", DisplayName = "Has Item Tag")
-	bool BP_HasItemTag(const FGameplayTag& ItemTag, int64 Count = 1) const;
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	bool HasItemTag(const FGameplayTag& ItemTag, int64 Count = 1) const;
 
 	/**
 	 * Add item from an item instance init info
@@ -214,36 +194,19 @@ public:
 
 	/**
 	 * Add an item instance to the inventory
-	 */
-	void AddInstance(UItemInstance* Instance, uint32 Count = 1);
-
-	/**
-	 * Add an item instance to the inventory
 	 *
 	 * A non-positive value for Count is ignored, and nothing happens in that case.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Inventory", DisplayName = "Add Instance")
-	void BP_AddInstance(UItemInstance* Instance, int64 Count = 1);
-
-	/**
-	 * Add an item to the inventory using its definition
-	 */
-	void AddDefinition(const UItemDefinition* Definition, uint32 Count = 1);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void AddInstance(UItemInstance* Instance, int64 Count = 1);
 
 	/**
 	 * Add an item to the inventory using its definition
 	 *
 	 * A non-positive value for Count is ignored, and nothing happens in that case.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Inventory", DisplayName = "Add Definition")
-	void BP_AddDefinition(const UItemDefinition* Definition, int64 Count = 1);
-
-	/**
-	 * Remove an item from the inventory that matches the given item instance
-	 *
-	 * Returns the removed instance. This removes the items that can stack with the given item instance.
-	 */
-	UItemInstance* RemoveInstance(const UItemInstance* Instance, uint32 Count = 1);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void AddDefinition(const UItemDefinition* Definition, int64 Count = 1);
 
 	/**
 	 * Remove an item from the inventory that matches the given item instance
@@ -251,16 +214,8 @@ public:
 	 * Returns the removed instance. This removes the items that can stack with the given item instance. A non-positive
 	 * value for Count is ignored, and nothing happens in that case.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Inventory", DisplayName = "Remove Instance")
-	UItemInstance* BP_RemoveInstance(const UItemInstance* Instance, int64 Count = 1);
-
-	/**
-	 * Remove an item from the inventory that matches the given item definition
-	 *
-	 * Returns the removed instance. This only removes the ones that can stack with the definition. If you want to
-	 * remove items that are associated with specific item instances, use RemoveInstance instead.
-	 */
-	UItemInstance* RemoveDefinition(const UItemDefinition* Definition, uint32 Count = 1);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UItemInstance* RemoveInstance(const UItemInstance* Instance, int64 Count = 1);
 
 	/**
 	 * Remove an item from the inventory that matches the given item definition
@@ -269,8 +224,8 @@ public:
 	 * remove items that are associated with specific item instances, use RemoveInstance instead. A non-positive value
 	 * for Count is ignored, and nothing happens in that case.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Inventory", DisplayName = "Remove Definition")
-	UItemInstance* BP_RemoveDefinition(const UItemDefinition* Definition, int64 Count = 1);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UItemInstance* RemoveDefinition(const UItemDefinition* Definition, int64 Count = 1);
 
 	/**
 	 * Remove an inventory slot at the given index in the array
@@ -278,16 +233,8 @@ public:
 	 * Returns the removed inventory slot. If the index is out of bounds, an empty and invalid inventory slot is
 	 * returned.
 	 */
-	FInventorySlot RemoveSlotAt(uint32 IndexToRemove);
-
-	/**
-	 * Remove an inventory slot at the given index in the array
-	 *
-	 * Returns the removed inventory slot. If the index is out of bounds, an empty and invalid inventory slot is
-	 * returned.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Inventory", DisplayName = "Remove Slot At")
-	FInventorySlot BP_RemoveSlotAt(int64 Index);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	FInventorySlot RemoveSlotAt(int32 Index);
 
 protected:
 	/**
