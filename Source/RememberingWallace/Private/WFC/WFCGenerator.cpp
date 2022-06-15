@@ -52,7 +52,7 @@ void AWFCGenerator::BeginPlay()
 	{
 		int x = 0;
 		int y = 0;
-		while (FindSmallestCell(x, y))
+		while (FindBestCell(x, y))
 		{
 			int index = x + (y * Width);
 			if (_TileStates[index].tiles.Num() <= 0)
@@ -75,6 +75,9 @@ void AWFCGenerator::BeginPlay()
 			if (x < Width - 1) CollapseCell(x + 1, y);
 			if (y > 0) CollapseCell(x, y - 1);
 			if (y < Height - 1) CollapseCell(x, y + 1);
+
+			// misc
+			forceSpawn--;
 		}
 	}
 
@@ -209,9 +212,18 @@ void AWFCGenerator::CollapseCell(int x, int y)
 
 	_TileStates[index].tiles = GetValidTiles(edges);
 	_TileStates[index].size = _TileStates[index].tiles.Num();
+	for (int i = 0; i < 4; i++)
+	{
+		// -1 and 0 are considered non-pathway edges
+		if (edges[i] > 0)
+		{
+			_TileStates[index].hasPaths = true;
+			break;
+		}
+	}
 }
 
-bool AWFCGenerator::FindSmallestCell(int& x, int& y)
+bool AWFCGenerator::FindBestCell(int& x, int& y)
 {
 	int smallest = Tiles.Num() * 4 + 1; // maximum possible number of tiles
 	int smallestIndex = -1;
@@ -223,7 +235,7 @@ bool AWFCGenerator::FindSmallestCell(int& x, int& y)
 		{
 			continue;
 		}
-		if (_TileStates[i].size < smallest)
+		if (_TileStates[i].size < smallest && (forceSpawn > 0 || _TileStates[i].hasPaths))
 		{
 			smallestIndex = i;
 			smallest = _TileStates[i].size;

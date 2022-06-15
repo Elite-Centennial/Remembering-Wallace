@@ -27,6 +27,7 @@ struct FValidTiles
 	int size = 0;
 	FVirtualTile tile;
 	TSubclassOf<AWFCTile> fromInput;
+	bool hasPaths = false;
 };
 
 UCLASS()
@@ -69,9 +70,11 @@ public:
 private:
 	TArray<FVirtualTile> GetValidTiles(TArray<int> edges);
 	void CollapseCell(int x, int y);
-	bool FindSmallestCell(int& x, int& y);
+	bool FindBestCell(int& x, int& y);
 
 	void SpawnTiles();
 
 	TArray<FValidTiles> _TileStates;
+	int forceSpawn = 1; // forces the algorithm to spawn at least this many tiles
+	// otherwise, the mechanism for stopping when we've closed off the dungeon can prevent us from spawning a single tile
 };
