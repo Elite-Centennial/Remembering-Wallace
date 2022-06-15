@@ -31,7 +31,7 @@ void AWFCGenerator::BeginPlay()
 	// place input tiles
 	for (int i = 0; i < InputArray.Num() && i < _TileStates.Num(); i++)
 	{
-		if (InputArray[i])
+		if (InputArray[i] != NULL)
 		{
 			_TileStates[i].fromInput = InputArray[i];
 			_TileStates[i].tiles.Empty();
@@ -141,8 +141,16 @@ void AWFCGenerator::CollapseCell(int x, int y)
 	}
 	else if (_TileStates[index - 1].size == 1)
 	{
-		edges[0] = Tiles[_TileStates[index - 1].tile.TileIndex]
-			.GetDefaultObject()->GetEdge(2, _TileStates[index - 1].tile.Rotations);
+		// this got cluttery because of the input array behavior
+		if (_TileStates[index - 1].fromInput != NULL)
+		{
+			edges[0] = _TileStates[index - 1].fromInput.GetDefaultObject()->GetEdge(2, 0);
+		}
+		else
+		{
+			edges[0] = Tiles[_TileStates[index - 1].tile.TileIndex]
+				.GetDefaultObject()->GetEdge(2, _TileStates[index - 1].tile.Rotations);
+		}
 	}
 
 	// check right
@@ -152,8 +160,15 @@ void AWFCGenerator::CollapseCell(int x, int y)
 	}
 	else if (_TileStates[index + 1].size == 1)
 	{
-		edges[2] = Tiles[_TileStates[index + 1].tile.TileIndex]
-			.GetDefaultObject()->GetEdge(0, _TileStates[index + 1].tile.Rotations);
+		if (_TileStates[index + 1].fromInput != NULL)
+		{
+			edges[2] = _TileStates[index + 1].fromInput.GetDefaultObject()->GetEdge(0, 0);
+		}
+		else
+		{
+			edges[2] = Tiles[_TileStates[index + 1].tile.TileIndex]
+				.GetDefaultObject()->GetEdge(0, _TileStates[index + 1].tile.Rotations);
+		}
 	}
 
 	// check above
@@ -163,8 +178,15 @@ void AWFCGenerator::CollapseCell(int x, int y)
 	}
 	else if (_TileStates[index - Width].size == 1)
 	{
-		edges[3] = Tiles[_TileStates[index - Width].tile.TileIndex]
-			.GetDefaultObject()->GetEdge(1, _TileStates[index - Width].tile.Rotations);
+		if (_TileStates[index - Width].fromInput != NULL)
+		{
+			edges[3] = _TileStates[index - Width].fromInput.GetDefaultObject()->GetEdge(1, 0);
+		}
+		else
+		{
+			edges[3] = Tiles[_TileStates[index - Width].tile.TileIndex]
+				.GetDefaultObject()->GetEdge(1, _TileStates[index - Width].tile.Rotations);
+		}
 	}
 
 	// check below
@@ -174,8 +196,15 @@ void AWFCGenerator::CollapseCell(int x, int y)
 	}
 	else if (_TileStates[index + Width].size == 1)
 	{
-		edges[1] = Tiles[_TileStates[index + Width].tile.TileIndex]
-			.GetDefaultObject()->GetEdge(3, _TileStates[index + Width].tile.Rotations);
+		if (_TileStates[index + Width].fromInput != NULL)
+		{
+			edges[1] = _TileStates[index + Width].fromInput.GetDefaultObject()->GetEdge(3, 0);
+		}
+		else
+		{
+			edges[1] = Tiles[_TileStates[index + Width].tile.TileIndex]
+				.GetDefaultObject()->GetEdge(3, _TileStates[index + Width].tile.Rotations);
+		}
 	}
 
 	_TileStates[index].tiles = GetValidTiles(edges);
@@ -215,6 +244,7 @@ bool AWFCGenerator::FindSmallestCell(int& x, int& y)
 
 void AWFCGenerator::SpawnTiles()
 {
+	FVector rootPosition = SceneComponent->GetComponentTransform().GetLocation();
 	UWorld* world = GetWorld();
 	for (int y = 0; y < Height; y++)
 	{
@@ -227,18 +257,18 @@ void AWFCGenerator::SpawnTiles()
 				if (_TileStates[index].fromInput != NULL)
 				{
 					spawnedActor = world->SpawnActor<AWFCTile>(_TileStates[index].fromInput->GetAuthoritativeClass());
-					FVector position(x * CellSize.X, y * CellSize.Y, 0);
+					FVector position(rootPosition.X + (x * CellSize.X), rootPosition.Y + (y * CellSize.Y), rootPosition.Z);
 					spawnedActor->SceneComponent->SetWorldTransform(FTransform(position));
 					spawnedActor->SetActorLabel(*FString("Tile" + FString::FromInt(index)));
 				}
 				else if (_TileStates[index].tile.TileIndex != -1)
 				{
 					spawnedActor = world->SpawnActor<AWFCTile>(Tiles[_TileStates[index].tile.TileIndex]->GetAuthoritativeClass());
-					FRotator rotation = FRotator(0, 0, _TileStates[index].tile.Rotations * 90);
+					FRotator rotation = FRotator(0, _TileStates[index].tile.Rotations * 90, 0);
 					FQuat quaternion = FQuat(rotation);
-					spawnedActor->AddActorLocalRotation(quaternion, false, 0, ETeleportType::ResetPhysics);
-					FVector position(x * CellSize.X, y * CellSize.Y, 0);
+					FVector position(rootPosition.X + (x * CellSize.X), rootPosition.Y + (y * CellSize.Y), rootPosition.Z);
 					spawnedActor->SceneComponent->SetWorldTransform(FTransform(position));
+					spawnedActor->AddActorLocalRotation(quaternion, false, 0, ETeleportType::ResetPhysics);
 					spawnedActor->SetActorLabel(*FString("Tile" + FString::FromInt(index)));
 
 				}
