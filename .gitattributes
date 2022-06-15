@@ -8,3 +8,5 @@
 /Content/Characters/GKnight/** filter=lfs diff=lfs merge=lfs -text
 # Textures for the medieval castle
 /Content/RememberingWallace/Medieval_Environment/**/Textures/** filter=lfs diff=lfs merge=lfs -text
+# Maps for the modular house
+/Content/RememberingWallace/ModularFantasyHouse/Maps/** filter=lfs diff=lfs merge=lfs -text
