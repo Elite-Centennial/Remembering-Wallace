@@ -18,6 +18,22 @@ void AWFCGenerator::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InitializeTiles();
+
+	WaveFunction();
+
+	SpawnTiles();
+}
+
+// Called every frame
+void AWFCGenerator::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+void AWFCGenerator::InitializeTiles()
+{
 	// initialize tile states
 	{
 		TArray<int> wildcard;
@@ -47,48 +63,6 @@ void AWFCGenerator::BeginPlay()
 			CollapseCell(x, y);
 		}
 	}
-
-	// loop until all cells are collapsed (or until FindSmallestCell returns false)
-	{
-		int x = 0;
-		int y = 0;
-		while (FindBestCell(x, y))
-		{
-			int index = x + (y * Width);
-			if (_TileStates[index].tiles.Num() <= 0)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WFCGenerator Error: no suitable tile found for cell %d %d . Make sure your tileset is complete"), x, y);
-				_TileStates[index].tile.TileIndex = 0;
-				_TileStates[index].size = 1;
-				_TileStates[index].tiles.Empty();
-			}
-			else
-			{
-				int chosenTile = FMath::RandRange(0, _TileStates[index].tiles.Num() - 1);
-				_TileStates[index].tile = _TileStates[index].tiles[chosenTile];
-				_TileStates[index].size = 1;
-				_TileStates[index].tiles.Empty();
-			}
-
-			// collapse neighbors
-			if (x > 0) CollapseCell(x - 1, y);
-			if (x < Width - 1) CollapseCell(x + 1, y);
-			if (y > 0) CollapseCell(x, y - 1);
-			if (y < Height - 1) CollapseCell(x, y + 1);
-
-			// misc
-			forceSpawn--;
-		}
-	}
-
-	SpawnTiles();
-}
-
-// Called every frame
-void AWFCGenerator::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 
 TArray<FVirtualTile> AWFCGenerator::GetValidTiles(TArray<int> edges)
@@ -252,6 +226,40 @@ bool AWFCGenerator::FindBestCell(int& x, int& y)
 	x = smallestIndex % Width;
 	y = smallestIndex / Width;
 	return true;
+}
+
+void AWFCGenerator::WaveFunction()
+{
+	// loop until all cells are collapsed (or until FindSmallestCell returns false)
+	int x = 0;
+	int y = 0;
+	while (FindBestCell(x, y))
+	{
+		int index = x + (y * Width);
+		if (_TileStates[index].tiles.Num() <= 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("WFCGenerator Error: no suitable tile found for cell %d %d . Make sure your tileset is complete"), x, y);
+			_TileStates[index].tile.TileIndex = 0;
+			_TileStates[index].size = 1;
+			_TileStates[index].tiles.Empty();
+		}
+		else
+		{
+			int chosenTile = FMath::RandRange(0, _TileStates[index].tiles.Num() - 1);
+			_TileStates[index].tile = _TileStates[index].tiles[chosenTile];
+			_TileStates[index].size = 1;
+			_TileStates[index].tiles.Empty();
+		}
+
+		// collapse neighbors
+		if (x > 0) CollapseCell(x - 1, y);
+		if (x < Width - 1) CollapseCell(x + 1, y);
+		if (y > 0) CollapseCell(x, y - 1);
+		if (y < Height - 1) CollapseCell(x, y + 1);
+
+		// misc
+		forceSpawn--;
+	}
 }
 
 void AWFCGenerator::SpawnTiles()

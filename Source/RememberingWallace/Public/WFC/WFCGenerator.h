@@ -72,6 +72,8 @@ private:
 	void CollapseCell(int x, int y);
 	bool FindBestCell(int& x, int& y);
 
+	void InitializeTiles();
+	void WaveFunction();
 	void SpawnTiles();
 
 	TArray<FValidTiles> _TileStates;
