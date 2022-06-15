@@ -34,13 +34,13 @@ struct INVENTORYSYSTEM_API FInventorySlot
 	/**
 	 * The item instance for this slot
 	 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
 	TObjectPtr<UItemInstance> Instance;
 
 	/**
 	 * The number of items stacked in this slot
 	 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stack")
 	int64 StackCount;
 
 	/**
@@ -141,7 +141,7 @@ private:
 /**
  * Actor component responsible for managing an inventory
  */
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, ClassGroup = "Gameplay", meta = (BlueprintSpawnableComponent))
 class INVENTORYSYSTEM_API UInventoryComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -190,6 +190,7 @@ public:
 	/**
 	 * Add item from an item instance init info
 	 */
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void AddInstanceInit(const FItemInstanceInit& InstanceInit);
 
 	/**

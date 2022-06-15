@@ -21,7 +21,7 @@ struct FItemPropertyData;
  * 2. Override CreateNewDataInstance method to allocate memory for the type you assigned to FDataType typedef. If the
  *    property class does not need any data saved to item instances, then you do not need to override this.
  */
-UCLASS(Abstract, Blueprintable, BlueprintType, DefaultToInstanced, EditInlineNew)
+UCLASS(Abstract, Blueprintable, BlueprintType, Const, DefaultToInstanced, EditInlineNew)
 class INVENTORYSYSTEM_API UItemProperty : public UObject
 {
 	GENERATED_BODY()

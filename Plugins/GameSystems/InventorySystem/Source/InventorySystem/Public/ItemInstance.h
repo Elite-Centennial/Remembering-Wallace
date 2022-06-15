@@ -16,7 +16,7 @@ class UItemDefinition;
  *
  * This is useful for manually initializing inventories or loading inventories from saves.
  */
-USTRUCT()
+USTRUCT(BlueprintType)
 struct INVENTORYSYSTEM_API FItemInstanceInit
 {
 	GENERATED_BODY()
@@ -24,13 +24,13 @@ struct INVENTORYSYSTEM_API FItemInstanceInit
 	/**
 	 * Item definition to use to instantiate the item
 	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Item")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
 	TObjectPtr<UItemDefinition> Definition = nullptr;
 
 	/**
 	 * The stack count if the item is stackable in inventories
 	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Stack", meta = (ClampMin = "1", UIMin = "1"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stack", meta = (ClampMin = "1", UIMin = "1"))
 	int64 StackCount = 1;
 };
 
