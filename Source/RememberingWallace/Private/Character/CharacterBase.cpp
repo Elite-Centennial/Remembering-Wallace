@@ -2,9 +2,12 @@
 
 #include "Character/CharacterBase.h"
 
+#include "Character/WallaceCharacterMovementComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer
+		.SetDefaultSubobjectClass<UWallaceCharacterMovementComponent>(CharacterMovementComponentName))
 {
 	// Character should rotate according to the move direction by default
 	bUseControllerRotationPitch = false;
