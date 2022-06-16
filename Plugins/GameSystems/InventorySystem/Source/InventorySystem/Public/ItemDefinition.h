@@ -42,15 +42,15 @@ public:
 	/**
 	 * Return the contained property of the specified type
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item", DisplayName = "Get Item Definition Property",
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item", DisplayName = "Get Item Property",
 		meta = (DeterminesOutputType = "PropertyClass"))
-	const UItemProperty* GetPropertyByClass(TSubclassOf<UItemProperty> PropertyClass) const;
+	const UItemProperty* GetProperty(TSubclassOf<UItemProperty> PropertyClass) const;
 
 	/**
 	 * Return the contained property of the specified type
 	 */
 	template<class T>
-	const T* GetProperty() const { return Cast<T>(GetPropertyByClass(T::StaticClass())); }
+	const T* GetProperty() const { return Cast<T>(GetProperty(T::StaticClass())); }
 
 	/**
 	 * Return a non-mutable reference to the properties

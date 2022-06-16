@@ -214,7 +214,7 @@ bool UInventoryComponent::HasItemTag(const FGameplayTag& ItemTag, int64 Count) c
 
 void UInventoryComponent::AddInstanceInit(const FItemInstanceInit& InstanceInit)
 {
-	Inventory.AddSlot(UItemInstance::CreateFromInstanceInit(InstanceInit, GetOwner()), InstanceInit.StackCount);
+	AddInstance(UItemInstance::CreateFromInstanceInit(InstanceInit, GetOwner()), InstanceInit.StackCount);
 }
 
 void UInventoryComponent::AddInstance(UItemInstance* Instance, int64 Count)

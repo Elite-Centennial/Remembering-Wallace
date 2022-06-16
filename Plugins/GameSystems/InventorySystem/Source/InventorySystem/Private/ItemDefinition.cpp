@@ -10,7 +10,7 @@ UItemDefinition::UItemDefinition(const FObjectInitializer& ObjectInitializer) : 
 {
 }
 
-const UItemProperty* UItemDefinition::GetPropertyByClass(
+const UItemProperty* UItemDefinition::GetProperty(
 	const TSubclassOf<UItemProperty> PropertyClass) const
 {
 	if (PropertyClass)

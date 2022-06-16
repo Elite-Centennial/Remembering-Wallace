@@ -23,14 +23,14 @@ UItemInstance* UItemInstance::CreateFromInstanceInit(const FItemInstanceInit& In
 	return Instance;
 }
 
-const FItemPropertyData* UItemInstance::GetInstanceData(
+const FItemPropertyData* UItemInstance::GetPropertyData(
 	const TSubclassOf<UItemProperty> PropertyClass) const
 {
 	const TUniquePtr<FItemPropertyData>* DataPtr = InstanceData.Find(PropertyClass->GetFName());
 	return DataPtr ? DataPtr->Get() : nullptr;
 }
 
-FItemPropertyData* UItemInstance::GetInstanceData(const TSubclassOf<UItemProperty> PropertyClass)
+FItemPropertyData* UItemInstance::GetPropertyData(const TSubclassOf<UItemProperty> PropertyClass)
 {
 	const TUniquePtr<FItemPropertyData>* DataPtr = InstanceData.Find(PropertyClass->GetFName());
 	return DataPtr ? DataPtr->Get() : nullptr;
@@ -38,7 +38,7 @@ FItemPropertyData* UItemInstance::GetInstanceData(const TSubclassOf<UItemPropert
 
 int64 UItemInstance::GetMaxStackCount() const
 {
-	const FItemPropertyData_Stack* StackData = GetInstanceData<UItemProperty_Stack>();
+	const FItemPropertyData_Stack* StackData = GetPropertyData<UItemProperty_Stack>();
 	return StackData ? StackData->MaxStackCount : InventorySystem::GMaxStackCountDefault;
 }
 

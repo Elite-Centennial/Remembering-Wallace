@@ -64,7 +64,7 @@ public:
 	 * Do not persist the returned pointer. The memory might be reallocated or freed throughout the lifetime of the
 	 * object instance.
 	 */
-	const FItemPropertyData* GetInstanceData(TSubclassOf<UItemProperty> PropertyClass) const;
+	const FItemPropertyData* GetPropertyData(TSubclassOf<UItemProperty> PropertyClass) const;
 
 	/**
 	 * Return the instance data for the given property class
@@ -72,24 +72,24 @@ public:
 	 * Do not persist the returned pointer. The memory might be reallocated or freed throughout the lifetime of the
 	 * object instance.
 	 */
-	FItemPropertyData* GetInstanceData(TSubclassOf<UItemProperty> PropertyClass);
+	FItemPropertyData* GetPropertyData(TSubclassOf<UItemProperty> PropertyClass);
 
 	/**
 	 * Return the instance data for the given property class
 	 */
 	template<class T>
-	const typename T::FDataType* GetInstanceData() const
+	const typename T::FDataType* GetPropertyData() const
 	{
-		return static_cast<const typename T::FDataType*>(GetInstanceData(T::StaticClass()));
+		return static_cast<const typename T::FDataType*>(GetPropertyData(T::StaticClass()));
 	}
 
 	/**
 	 * Return the instance data for the given property class
 	 */
 	template<class T>
-	typename T::FDataType* GetInstanceData()
+	typename T::FDataType* GetPropertyData()
 	{
-		return static_cast<typename T::FDataType*>(GetInstanceData(T::StaticClass()));
+		return static_cast<typename T::FDataType*>(GetPropertyData(T::StaticClass()));
 	}
 
 	/**
