@@ -32,7 +32,7 @@ public:
 	/**
 	 * Return the gameplay tag used for identifying the item
 	 */
-	const FGameplayTag& GetIdentifierTag() const { return AssociatedTag; }
+	const FGameplayTag& GetIdentifierTag() const { return IdentifierTag; }
 
 	/**
 	 * Return the display name for this item
@@ -70,7 +70,7 @@ protected:
 	 * where the "Something" can be several levels of child tags.
 	 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "BaseProperty", meta = (Categories = "ItemDef.Item"))
-	FGameplayTag AssociatedTag;
+	FGameplayTag IdentifierTag;
 
 	/**
 	 * Name of this item that is displayed to the player
