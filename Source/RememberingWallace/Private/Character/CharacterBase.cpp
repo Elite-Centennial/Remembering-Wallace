@@ -4,7 +4,7 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 
-ACharacterBase::ACharacterBase()
+ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer)
 {
 	// Character should rotate according to the move direction by default
 	bUseControllerRotationPitch = false;
@@ -48,6 +48,13 @@ void ACharacterBase::HandleWeaponSheathingFinished()
 	{
 		WeaponState = ECharacterWeaponState::Sheathed;
 	}
+}
+
+void ACharacterBase::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	InitASCActorInfo();
 }
 
 void ACharacterBase::RequestWeaponDraw()

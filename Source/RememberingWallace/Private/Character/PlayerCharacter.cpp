@@ -2,13 +2,15 @@
 
 #include "Character/PlayerCharacter.h"
 
+#include "AbilitySystem/WallaceAbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Player/WallacePlayerState.h"
 
 const FName APlayerCharacter::CameraArmName(TEXT("CameraArm"));
 const FName APlayerCharacter::PlayerCameraName(TEXT("PlayerCamera"));
 
-APlayerCharacter::APlayerCharacter()
+APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	// Create CameraArm component
 	CameraArm = CreateDefaultSubobject<USpringArmComponent>(CameraArmName);
@@ -22,6 +24,21 @@ APlayerCharacter::APlayerCharacter()
 	PlayerCamera->SetupAttachment(CameraArm, USpringArmComponent::SocketName);
 	// Rotation is already handled by CameraArm
 	PlayerCamera->bUsePawnControlRotation = false;
+}
+
+UWallaceAbilitySystemComponent* APlayerCharacter::GetWallaceAbilitySystemComponent() const
+{
+	if (const AWallacePlayerState* WallacePS = GetPlayerState<AWallacePlayerState>())
+	{
+		return WallacePS->GetWallaceAbilitySystemComponent();
+	}
+
+	return nullptr;
+}
+
+UAbilitySystemComponent* APlayerCharacter::GetAbilitySystemComponent() const
+{
+	return GetWallaceAbilitySystemComponent();
 }
 
 void APlayerCharacter::MoveForward(const float Value)
@@ -68,6 +85,14 @@ void APlayerCharacter::ToggleWeaponDrawSheathe()
 		break;
 	default:
 		break;
+	}
+}
+
+void APlayerCharacter::InitASCActorInfo()
+{
+	if (AWallacePlayerState* WallacePS = GetPlayerState<AWallacePlayerState>())
+	{
+		WallacePS->GetAbilitySystemComponent()->InitAbilityActorInfo(WallacePS, this);
 	}
 }
 
