@@ -6,9 +6,9 @@
 #include "RememberingWallaceTags.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-#include "WallaceCharacterMovementComponent.generated.h"
+#include "CharacterBaseMovementComponent.generated.h"
 
-class UWallaceCharacterMovementComponent;
+class UCharacterBaseMovementComponent;
 
 /**
  * Gameplay tag for the state where movement is not allowed
@@ -26,10 +26,10 @@ struct REMEMBERINGWALLACE_API FCharacterGroundInfo
 	GENERATED_BODY()
 
 	// Allow access to the private field
-	friend UWallaceCharacterMovementComponent;
+	friend UCharacterBaseMovementComponent;
 
 	/**
-	 * Returns whether this data is from the proper update by UWallaceCharacterMovementComponent
+	 * Returns whether this data is from the proper update by UCharacterBaseMovementComponent
 	 */
 	bool IsValid() const;
 
@@ -65,7 +65,7 @@ private:
  * 2. Disable movement when the owner has the gameplay tag that is meant to stop any movement.
  */
 UCLASS()
-class REMEMBERINGWALLACE_API UWallaceCharacterMovementComponent : public UCharacterMovementComponent
+class REMEMBERINGWALLACE_API UCharacterBaseMovementComponent : public UCharacterMovementComponent
 {
 	GENERATED_BODY()
 
@@ -73,7 +73,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	UWallaceCharacterMovementComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	UCharacterBaseMovementComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	/**
 	 * Get the current ground info, updating the internally cached value only when necessary

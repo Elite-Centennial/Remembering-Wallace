@@ -2,12 +2,12 @@
 
 #include "Character/CharacterBase.h"
 
-#include "Character/WallaceCharacterMovementComponent.h"
+#include "Character/CharacterBaseMovementComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer
-		.SetDefaultSubobjectClass<UWallaceCharacterMovementComponent>(CharacterMovementComponentName))
+		.SetDefaultSubobjectClass<UCharacterBaseMovementComponent>(CharacterMovementComponentName))
 {
 	// Character should rotate according to the move direction by default
 	bUseControllerRotationPitch = false;
@@ -17,6 +17,11 @@ ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer)
 
 	// Weapon is sheathed by default
 	WeaponState = ECharacterWeaponState::Sheathed;
+}
+
+UCharacterBaseMovementComponent* ACharacterBase::GetCharacterBaseMovement() const
+{
+	return CastChecked<UCharacterBaseMovementComponent>(GetCharacterMovement());
 }
 
 void ACharacterBase::HandleWeaponGrabbed()

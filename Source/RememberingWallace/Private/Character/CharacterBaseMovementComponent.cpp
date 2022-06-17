@@ -1,6 +1,6 @@
 ﻿// Elite Centennial
 
-#include "Character/WallaceCharacterMovementComponent.h"
+#include "Character/CharacterBaseMovementComponent.h"
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
@@ -11,12 +11,12 @@
 DEFINE_GAMEPLAY_TAG(GTag_Unit_State_Immobilized, "Unit.State.Immobilized",
 	TEXT("Movement is prohibited in this state"));
 
-UWallaceCharacterMovementComponent::UWallaceCharacterMovementComponent(const FObjectInitializer& ObjectInitializer)
+UCharacterBaseMovementComponent::UCharacterBaseMovementComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 }
 
-const FCharacterGroundInfo& UWallaceCharacterMovementComponent::GetGroundInfo()
+const FCharacterGroundInfo& UCharacterBaseMovementComponent::GetGroundInfo()
 {
 	// Do not compute if the actor isn't valid or the info is already up to date
 	if (!CharacterOwner || InternalCachedGroundInfo.IsUpToDate())
@@ -86,13 +86,13 @@ const FCharacterGroundInfo& UWallaceCharacterMovementComponent::GetGroundInfo()
 	return InternalCachedGroundInfo;
 }
 
-const FCharacterGroundInfo& UWallaceCharacterMovementComponent::BP_GetCachedGroundInfo(bool& bIsUpToDate) const
+const FCharacterGroundInfo& UCharacterBaseMovementComponent::BP_GetCachedGroundInfo(bool& bIsUpToDate) const
 {
 	bIsUpToDate = InternalCachedGroundInfo.IsUpToDate();
 	return InternalCachedGroundInfo;
 }
 
-FRotator UWallaceCharacterMovementComponent::GetDeltaRotation(const float DeltaTime) const
+FRotator UCharacterBaseMovementComponent::GetDeltaRotation(const float DeltaTime) const
 {
 	// Return zero if the owning actor has the immobilized tag
 	if (const UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(GetOwner()))
@@ -106,7 +106,7 @@ FRotator UWallaceCharacterMovementComponent::GetDeltaRotation(const float DeltaT
 	return Super::GetDeltaRotation(DeltaTime);
 }
 
-float UWallaceCharacterMovementComponent::GetMaxSpeed() const
+float UCharacterBaseMovementComponent::GetMaxSpeed() const
 {
 	// Return zero if the owning actor has the immobilized tag
 	if (const UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(GetOwner()))
@@ -120,7 +120,7 @@ float UWallaceCharacterMovementComponent::GetMaxSpeed() const
 	return Super::GetMaxSpeed();
 }
 
-float UWallaceCharacterMovementComponent::GetGroundTraceDistance() const
+float UCharacterBaseMovementComponent::GetGroundTraceDistance() const
 {
 	return GetDefault<UDeveloperSettings_Characters>()->GroundTraceDistance;
 }
