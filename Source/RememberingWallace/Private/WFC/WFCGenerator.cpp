@@ -11,6 +11,9 @@ AWFCGenerator::AWFCGenerator()
 
 	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
 	SetRootComponent(SceneComponent);
+
+	BoundingBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Bounds"));
+	BoundingBox->SetupAttachment(SceneComponent);
 }
 
 // Called when the game starts or when spawned
@@ -23,13 +26,22 @@ void AWFCGenerator::BeginPlay()
 	WaveFunction();
 
 	SpawnTiles();
+
+	// remove box collider. If for some reason we need it later, remove the following lines
+	BoundingBox->DestroyComponent();
 }
 
 // Called every frame
 void AWFCGenerator::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
 
+void AWFCGenerator::CalculateBoundingBox()
+{
+	BoundingBox->SetBoxExtent(FVector(CellSize.X * Width / 2, CellSize.Y * Height / 2, CellSize.Z / 2));
+	BoundingBox->SetRelativeLocation(FVector((CellSize.X * Width / 2) - (CellSize.X / 2),
+		(CellSize.Y * Height / 2) - (CellSize.Y / 2), CellSize.Z / 2));
 }
 
 void AWFCGenerator::InitializeTiles()

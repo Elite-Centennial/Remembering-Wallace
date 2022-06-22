@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/BoxComponent.h"
 #include "WFC/WFCTile.h"
 #include "WFCGenerator.generated.h"
 
@@ -43,6 +44,9 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UFUNCTION(BlueprintCallable, CallInEditor, Category = "WFC Generator")
+	void CalculateBoundingBox();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -66,6 +70,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "WFC Generator")
 	int EdgeLabel = 0;
+
+	UPROPERTY(VisibleAnywhere, BluePrintReadWrite, Instanced)
+	UBoxComponent* BoundingBox;
 
 private:
 	TArray<FVirtualTile> GetValidTiles(TArray<int> edges);
