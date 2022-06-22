@@ -277,6 +277,8 @@ void AWFCGenerator::WaveFunction()
 void AWFCGenerator::SpawnTiles()
 {
 	FVector rootPosition = SceneComponent->GetComponentTransform().GetLocation();
+	FVector forward = SceneComponent->GetForwardVector() * CellSize.X; // "forward" refers to the positive x axis
+	FVector right = SceneComponent->GetRightVector() * CellSize.Y; // "right" refers to the positive y axis
 	UWorld* world = GetWorld();
 	for (int y = 0; y < Height; y++)
 	{
@@ -289,16 +291,22 @@ void AWFCGenerator::SpawnTiles()
 				if (_TileStates[index].fromInput != NULL)
 				{
 					spawnedActor = world->SpawnActor<AWFCTile>(_TileStates[index].fromInput->GetAuthoritativeClass());
-					FVector position(rootPosition.X + (x * CellSize.X), rootPosition.Y + (y * CellSize.Y), rootPosition.Z);
+					FRotator rotation = FRotator(0, SceneComponent->GetComponentTransform().GetRotation().Euler().Z, 0);
+					FQuat quaternion = FQuat(rotation);
+					//FVector position(rootPosition.X + (x * CellSize.X), rootPosition.Y + (y * CellSize.Y), rootPosition.Z);
+					FVector position(rootPosition + (right * y) + (forward * x));
 					spawnedActor->SceneComponent->SetWorldTransform(FTransform(position));
+					spawnedActor->AddActorLocalRotation(quaternion, false, 0, ETeleportType::ResetPhysics);
 					spawnedActor->SetActorLabel(*FString("Tile" + FString::FromInt(index)));
 				}
 				else if (_TileStates[index].tile.TileIndex != -1)
 				{
 					spawnedActor = world->SpawnActor<AWFCTile>(Tiles[_TileStates[index].tile.TileIndex]->GetAuthoritativeClass());
-					FRotator rotation = FRotator(0, _TileStates[index].tile.Rotations * 90, 0);
+					FRotator rotation = FRotator(0,
+						(_TileStates[index].tile.Rotations * 90) + SceneComponent->GetComponentTransform().GetRotation().Euler().Z, 0);
 					FQuat quaternion = FQuat(rotation);
-					FVector position(rootPosition.X + (x * CellSize.X), rootPosition.Y + (y * CellSize.Y), rootPosition.Z);
+					//FVector position(rootPosition.X + (x * CellSize.X), rootPosition.Y + (y * CellSize.Y), rootPosition.Z);
+					FVector position(rootPosition + (right * y) + (forward * x));
 					spawnedActor->SceneComponent->SetWorldTransform(FTransform(position));
 					spawnedActor->AddActorLocalRotation(quaternion, false, 0, ETeleportType::ResetPhysics);
 					spawnedActor->SetActorLabel(*FString("Tile" + FString::FromInt(index)));
