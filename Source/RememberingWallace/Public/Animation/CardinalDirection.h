@@ -28,16 +28,16 @@ struct FCardinalDirectionAnimationSet
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<UAnimSequence> Forward;
+	TObjectPtr<UAnimSequence> Forward = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<UAnimSequence> Backward;
+	TObjectPtr<UAnimSequence> Backward = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<UAnimSequence> Left;
+	TObjectPtr<UAnimSequence> Left = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<UAnimSequence> Right;
+	TObjectPtr<UAnimSequence> Right = nullptr;
 };
 
 /**
