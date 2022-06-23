@@ -76,7 +76,7 @@ void ACharacterBase::RequestWeaponDraw()
 
 	// Character rotation should follow the camera when the weapon is drawn
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	bUseControllerRotationYaw = true;
 
 	if (WeaponDrawRequestedDelegate.IsBound())
 	{
@@ -95,7 +95,7 @@ void ACharacterBase::RequestWeaponSheath()
 
 	// Character should face the movement direction when the weapon is sheathed
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	bUseControllerRotationYaw = false;
 
 	if (WeaponSheatheRequestedDelegate.IsBound())
 	{
