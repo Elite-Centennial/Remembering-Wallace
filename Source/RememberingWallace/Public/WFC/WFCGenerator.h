@@ -75,7 +75,7 @@ public:
 	UBoxComponent* BoundingBox;
 
 private:
-	TArray<FVirtualTile> GetValidTiles(TArray<int> edges);
+	TArray<FVirtualTile> GetValidTiles(const FTileEdges& edges);
 	void CollapseCell(int x, int y);
 	bool FindBestCell(int& x, int& y);
 

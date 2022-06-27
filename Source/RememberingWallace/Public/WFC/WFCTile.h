@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "WFCAdjacencyRules.h"
+#include "WFC/WFCAdjacencyRules.h"
 #include "WFCTile.generated.h"
 
 UCLASS()
@@ -25,12 +25,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	bool IsCompatible(const TArray<int> edges, int rotations);
-	int GetEdge(int edge, int rotations);
-
 	UPROPERTY(EditAnywhere)
 	USceneComponent* SceneComponent;
 
 	UPROPERTY(EditAnywhere)
-		UWFCAdjacencyRules* AdjacencyRules;
+	UWFCAdjacencyRules* AdjacencyRules;
 };
