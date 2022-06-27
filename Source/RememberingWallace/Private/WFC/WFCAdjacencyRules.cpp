@@ -32,3 +32,35 @@ void UWFCAdjacencyRules::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	// ...
 }
 
+bool UWFCAdjacencyRules::IsCompatible(FTileEdges edges, int rotations)
+{
+	// an incompatible edge is one that isn't a wildcard AND has a non-matching id
+	if (edges.Left != -1 && edges.Left != Edges.GetEdge(rotations % 4))
+	{
+		return false;
+	}
+	if (edges.Bottom != -1 && edges.Bottom != Edges.GetEdge((1 + rotations) % 4))
+	{
+		return false;
+	}
+	if (edges.Right != -1 && edges.Right != Edges.GetEdge((2 + rotations) % 4))
+	{
+		return false;
+	}
+	if (edges.Top != -1 && edges.Top != Edges.GetEdge((3 + rotations) % 4))
+	{
+		return false;
+	}
+	// if no edges fail, then this tile is compatible
+	return true;
+}
+
+int UWFCAdjacencyRules::GetEdge(int edge, int rotations)
+{
+	if (bRotatable)
+	{
+		return Edges.GetEdge((edge + rotations) % 4);
+	}
+
+	return Edges.GetEdge(edge % 4);
+}

@@ -48,9 +48,9 @@ void AWFCGenerator::InitializeTiles()
 {
 	// initialize tile states
 	{
-		TArray<int> wildcard;
-		wildcard.Init(-1, 4);
-		TArray<FVirtualTile> indices = GetValidTiles(wildcard); // expensive
+		FTileEdges wildcard = {-1, -1, -1, -1};
+		TArray<FVirtualTile> indices = GetValidTiles(wildcard); // expensive, but builds an initial
+		// array of virtual tile representations of the actual tile array
 		int size = indices.Num();
 
 		_TileStates.Init({ indices, size }, Width * Height);
@@ -77,30 +77,25 @@ void AWFCGenerator::InitializeTiles()
 	}
 }
 
-TArray<FVirtualTile> AWFCGenerator::GetValidTiles(TArray<int> edges)
+TArray<FVirtualTile> AWFCGenerator::GetValidTiles(const FTileEdges& edges)
 {
 	TArray<FVirtualTile> validTiles = {};
-
-	if (edges.Num() != 4)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("WFCGenerator Error: array of invalid size passed to GetValidTiles()"));
-		return validTiles;
-	}
 
 	for (int i = 0; i < Tiles.Num(); i++)
 	{
 		AWFCTile* tileObject = Tiles[i].GetDefaultObject();
 		
-		if (tileObject->IsCompatible(edges, 0))
+		if (tileObject->AdjacencyRules->IsCompatible(edges, 0))
 		{
 			validTiles.Add({ i, 0 });
 		}
 
 		if (tileObject->AdjacencyRules->bRotatable)
 		{
+			// we're rotating quads -> there's a bunch of magic 4's in this code and I can't be bothered to clean them up
 			for (int j = 1; j < 4; j++)
 			{
-				if (tileObject->IsCompatible(edges, j))
+				if (tileObject->AdjacencyRules->IsCompatible(edges, j))
 				{
 					validTiles.Add({ i, j });
 				}
@@ -114,8 +109,7 @@ TArray<FVirtualTile> AWFCGenerator::GetValidTiles(TArray<int> edges)
 // "believe it or not this is the shortened version"
 void AWFCGenerator::CollapseCell(int x, int y)
 {
-	TArray<int> edges;
-	edges.Init(-1, 4); // populate with wildcards by default
+	FTileEdges edges = {-1, -1, -1, -1}; // populate with wildcards by default
 	int index = (y * Width) + x; // precomputing because it comes up a lot in here
 
 	if (_TileStates[index].tile.TileIndex != -1 || _TileStates[index].fromInput != NULL)
@@ -126,73 +120,73 @@ void AWFCGenerator::CollapseCell(int x, int y)
 	// check left
 	if (x - 1 < 0)
 	{
-		edges[0] = EdgeLabel;
+		edges.Left = EdgeLabel;
 	}
 	else if (_TileStates[index - 1].size == 1)
 	{
 		// this got cluttery because of the input array behavior
 		if (_TileStates[index - 1].fromInput != NULL)
 		{
-			edges[0] = _TileStates[index - 1].fromInput.GetDefaultObject()->GetEdge(2, 0);
+			edges.Left = _TileStates[index - 1].fromInput.GetDefaultObject()->AdjacencyRules->Edges.Right;
 		}
 		else
 		{
-			edges[0] = Tiles[_TileStates[index - 1].tile.TileIndex]
-				.GetDefaultObject()->GetEdge(2, _TileStates[index - 1].tile.Rotations);
+			edges.Left = Tiles[_TileStates[index - 1].tile.TileIndex]
+				.GetDefaultObject()->AdjacencyRules->GetEdge(2, _TileStates[index - 1].tile.Rotations);
 		}
 	}
 
 	// check right
 	if (x + 1 >= Width)
 	{
-		edges[2] = EdgeLabel;
+		edges.Right = EdgeLabel;
 	}
 	else if (_TileStates[index + 1].size == 1)
 	{
 		if (_TileStates[index + 1].fromInput != NULL)
 		{
-			edges[2] = _TileStates[index + 1].fromInput.GetDefaultObject()->GetEdge(0, 0);
+			edges.Right = _TileStates[index + 1].fromInput.GetDefaultObject()->AdjacencyRules->Edges.Left;
 		}
 		else
 		{
-			edges[2] = Tiles[_TileStates[index + 1].tile.TileIndex]
-				.GetDefaultObject()->GetEdge(0, _TileStates[index + 1].tile.Rotations);
+			edges.Right = Tiles[_TileStates[index + 1].tile.TileIndex]
+				.GetDefaultObject()->AdjacencyRules->GetEdge(0, _TileStates[index + 1].tile.Rotations);
 		}
 	}
 
 	// check above
 	if (y - 1 < 0)
 	{
-		edges[3] = EdgeLabel;
+		edges.Top = EdgeLabel;
 	}
 	else if (_TileStates[index - Width].size == 1)
 	{
 		if (_TileStates[index - Width].fromInput != NULL)
 		{
-			edges[3] = _TileStates[index - Width].fromInput.GetDefaultObject()->GetEdge(1, 0);
+			edges.Top = _TileStates[index - Width].fromInput.GetDefaultObject()->AdjacencyRules->Edges.Bottom;
 		}
 		else
 		{
-			edges[3] = Tiles[_TileStates[index - Width].tile.TileIndex]
-				.GetDefaultObject()->GetEdge(1, _TileStates[index - Width].tile.Rotations);
+			edges.Top = Tiles[_TileStates[index - Width].tile.TileIndex]
+				.GetDefaultObject()->AdjacencyRules->GetEdge(1, _TileStates[index - Width].tile.Rotations);
 		}
 	}
 
 	// check below
 	if (y + 1 >= Height)
 	{
-		edges[1] = EdgeLabel;
+		edges.Bottom = EdgeLabel;
 	}
 	else if (_TileStates[index + Width].size == 1)
 	{
 		if (_TileStates[index + Width].fromInput != NULL)
 		{
-			edges[1] = _TileStates[index + Width].fromInput.GetDefaultObject()->GetEdge(3, 0);
+			edges.Bottom = _TileStates[index + Width].fromInput.GetDefaultObject()->AdjacencyRules->Edges.Top;
 		}
 		else
 		{
-			edges[1] = Tiles[_TileStates[index + Width].tile.TileIndex]
-				.GetDefaultObject()->GetEdge(3, _TileStates[index + Width].tile.Rotations);
+			edges.Bottom = Tiles[_TileStates[index + Width].tile.TileIndex]
+				.GetDefaultObject()->AdjacencyRules->GetEdge(3, _TileStates[index + Width].tile.Rotations);
 		}
 	}
 
@@ -201,7 +195,7 @@ void AWFCGenerator::CollapseCell(int x, int y)
 	for (int i = 0; i < 4; i++)
 	{
 		// -1 and 0 are considered non-pathway edges
-		if (edges[i] > 0)
+		if (edges.GetEdge(i) > 0)
 		{
 			_TileStates[index].hasPaths = true;
 			break;
@@ -277,6 +271,7 @@ void AWFCGenerator::WaveFunction()
 void AWFCGenerator::SpawnTiles()
 {
 	FVector rootPosition = SceneComponent->GetComponentTransform().GetLocation();
+	// these vectors are relative to the generator's rotation so we can effectively rotate the entire dungeon being generated
 	FVector forward = SceneComponent->GetForwardVector() * CellSize.X; // "forward" refers to the positive x axis
 	FVector right = SceneComponent->GetRightVector() * CellSize.Y; // "right" refers to the positive y axis
 	UWorld* world = GetWorld();
