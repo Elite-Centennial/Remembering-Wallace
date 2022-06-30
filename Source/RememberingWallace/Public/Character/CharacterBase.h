@@ -8,6 +8,7 @@
 #include "CharacterBase.generated.h"
 
 class ACharacterBase;
+class UCharacterBaseMovementComponent;
 
 /**
  * Event dispatcher for when weapon draw is requested
@@ -41,6 +42,12 @@ class REMEMBERINGWALLACE_API ACharacterBase : public ACharacter
 
 public:
 	ACharacterBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	/**
+	 * Return the customized character movement component
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Character")
+	UCharacterBaseMovementComponent* GetCharacterBaseMovement() const;
 
 	/**
 	 * Return the weapon state

@@ -17,6 +17,7 @@ public class RememberingWallace : ModuleRules
 			"GameplayTags",
 			"GameplayTasks",
 			"GameplayAbilities",
+			"DeveloperSettings",
 		});
 	}
 }
