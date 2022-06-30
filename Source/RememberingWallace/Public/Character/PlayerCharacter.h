@@ -54,6 +54,7 @@ protected:
 	 *
 	 * @param Value Input value from -1.0 to 1.0 inclusive
 	 */
+	UFUNCTION(BlueprintCallable, Category = "Character", meta = (BlueprintProtected = "true"))
 	void MoveForward(float Value);
 
 	/**
@@ -61,6 +62,7 @@ protected:
 	 *
 	 * @param Value Input value from -1.0 to 1.0 inclusive
 	 */
+	UFUNCTION(BlueprintCallable, Category = "Character", meta = (BlueprintProtected = "true"))
 	void MoveRight(float Value);
 
 	/**

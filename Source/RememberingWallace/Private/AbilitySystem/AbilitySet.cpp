@@ -3,6 +3,7 @@
 #include "AbilitySystem/AbilitySet.h"
 
 #include "RememberingWallace.h"
+#include "AbilitySystem/AbilityInputID.h"
 #include "AbilitySystem/WallaceAbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/AttributeSetBase.h"
 
@@ -164,8 +165,13 @@ bool UAbilitySet::Grant(
 			continue;
 		}
 
-		const FGameplayAbilitySpecHandle Handle =
-			AbilitySystemComponent->K2_GiveAbility(AbilityToGrant.GameplayAbility, AbilityToGrant.AbilityLevel);
+		// Input ID should be set to the default value of -1 if the ability is not bound to any input
+		const int32 InputID = AbilityToGrant.InputID == EAbilityInputID::None
+			? INDEX_NONE
+			: static_cast<uint8>(AbilityToGrant.InputID);
+
+		const FGameplayAbilitySpecHandle Handle = AbilitySystemComponent->K2_GiveAbility(
+			AbilityToGrant.GameplayAbility, AbilityToGrant.AbilityLevel, InputID);
 
 		// Add to the handles set if provided
 		if (OutHandles)

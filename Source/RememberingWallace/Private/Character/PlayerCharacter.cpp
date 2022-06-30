@@ -108,11 +108,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAxis("Look Up / Down Mouse", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("Turn Right / Left Mouse", this, &APawn::AddControllerYawInput);
 
-	// Jump action bindings
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-
-	// Weapon draw / sheathe action bindings
-	PlayerInputComponent->BindAction(
-		"Weapon Draw / Sheath", IE_Pressed, this, &APlayerCharacter::ToggleWeaponDrawSheathe);
+	// Register input bindings for the ASC
+	// The ASC is never null here because we're doing a single-player game.
+	GetAbilitySystemComponent()->BindToInputComponent(PlayerInputComponent);
 }

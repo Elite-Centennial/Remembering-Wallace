@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilityInputID.h"
 #include "GameplayAbilitySpec.h"
 #include "GameplayEffectTypes.h"
 #include "Engine/DataAsset.h"
@@ -64,7 +65,6 @@ struct FAbilitySet_GameplayEffect
 };
 
 /**
-/**
  * Information about a gameplay ability to include in an ability set
  *
  * This code is adapted from Lyra Starter Game sample project.
@@ -85,6 +85,12 @@ struct FAbilitySet_GameplayAbility
 	 */
 	UPROPERTY(EditDefaultsOnly)
 	int32 AbilityLevel;
+
+	/**
+	 * Player input this ability is bound to
+	 */
+	UPROPERTY(EditDefaultsOnly)
+	EAbilityInputID InputID;
 };
 
 /**
