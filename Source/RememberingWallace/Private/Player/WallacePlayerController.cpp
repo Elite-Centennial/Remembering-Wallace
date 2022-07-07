@@ -10,17 +10,30 @@ AWallacePlayerController::AWallacePlayerController(const FObjectInitializer& Obj
 {
 }
 
+AWallacePlayerState* AWallacePlayerController::GetWallacePlayerState() const
+{
+	return GetPlayerState<AWallacePlayerState>();
+}
+
 UWallaceAbilitySystemComponent* AWallacePlayerController::GetWallaceAbilitySystemComponent() const
 {
-	if (const AWallacePlayerState* WallacePS = GetPlayerState<AWallacePlayerState>())
-	{
-		return WallacePS->GetWallaceAbilitySystemComponent();
-	}
+	const AWallacePlayerState* WallacePS = GetWallacePlayerState();
+	return WallacePS ? WallacePS->GetWallaceAbilitySystemComponent() : nullptr;
+}
 
-	return nullptr;
+UEquipmentManagerComponent* AWallacePlayerController::GetEquipmentManagerComponent() const
+{
+	const AWallacePlayerState* WallacePS = GetWallacePlayerState();
+	return WallacePS ? WallacePS->GetEquipmentManagerComponent() : nullptr;
 }
 
 UAbilitySystemComponent* AWallacePlayerController::GetAbilitySystemComponent() const
 {
 	return GetWallaceAbilitySystemComponent();
+}
+
+UInventoryComponent* AWallacePlayerController::GetInventoryComponent_Implementation() const
+{
+	const AWallacePlayerState* WallacePS = GetWallacePlayerState();
+	return WallacePS ? Execute_GetInventoryComponent(WallacePS) : nullptr;
 }

@@ -5,6 +5,7 @@
 #include "AbilitySystem/WallaceAbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Items/EquipmentManagerComponent.h"
 #include "Player/WallacePlayerState.h"
 
 const FName APlayerCharacter::CameraArmName(TEXT("CameraArm"));
@@ -26,19 +27,45 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer) 
 	PlayerCamera->bUsePawnControlRotation = false;
 }
 
-UWallaceAbilitySystemComponent* APlayerCharacter::GetWallaceAbilitySystemComponent() const
+AWallacePlayerState* APlayerCharacter::GetWallacePlayerState() const
 {
-	if (const AWallacePlayerState* WallacePS = GetPlayerState<AWallacePlayerState>())
-	{
-		return WallacePS->GetWallaceAbilitySystemComponent();
-	}
-
-	return nullptr;
+	return GetPlayerState<AWallacePlayerState>();
 }
 
-UAbilitySystemComponent* APlayerCharacter::GetAbilitySystemComponent() const
+UInventoryComponent* APlayerCharacter::GetInventoryComponent_Implementation() const
 {
-	return GetWallaceAbilitySystemComponent();
+	const AWallacePlayerState* WallacePS = GetWallacePlayerState();
+	return WallacePS ? Execute_GetInventoryComponent(WallacePS) : nullptr;
+}
+
+UWallaceAbilitySystemComponent* APlayerCharacter::GetWallaceAbilitySystemComponent() const
+{
+	const AWallacePlayerState* WallacePS = GetWallacePlayerState();
+	return WallacePS ? WallacePS->GetWallaceAbilitySystemComponent() : nullptr;
+}
+
+UEquipmentManagerComponent* APlayerCharacter::GetEquipmentManagerComponent() const
+{
+	const AWallacePlayerState* WallacePS = GetWallacePlayerState();
+	return WallacePS ? WallacePS->GetEquipmentManagerComponent() : nullptr;
+}
+
+void APlayerCharacter::PossessedBy(AController* NewController)
+{
+	// Initialize various information on the components in the player state
+	// This MUST come before calling the parent implementation because we want all data to be initialized before calling
+	// the possessed event in the blueprint graph. However, we need to be careful that all fields related to the
+	// information on the new "possessed" state are not assigned at all. Therefore, we should only use the data coming
+	// in directly from the input value, the new controller actor.
+	// We cannot use GetPlayerState here, so we get the player state directly from the new controller.
+	if (const AWallacePlayerState* WallacePS = Cast<AWallacePlayerState>(NewController->PlayerState))
+	{
+		// We cannot use GetController here, so use the new controller directly.
+		WallacePS->GetAbilitySystemComponent()->InitAbilityActorInfo(NewController, this);
+	}
+
+	// Handle the possession by the new controller
+	Super::PossessedBy(NewController);
 }
 
 void APlayerCharacter::MoveForward(const float Value)
@@ -71,29 +98,6 @@ void APlayerCharacter::MoveRight(const float Value)
 
 	// Apply input
 	AddMovementInput(Right, Value);
-}
-
-void APlayerCharacter::ToggleWeaponDrawSheathe()
-{
-	switch (GetWeaponState())
-	{
-	case ECharacterWeaponState::Sheathed:
-		RequestWeaponDraw();
-		break;
-	case ECharacterWeaponState::Drawn:
-		RequestWeaponSheath();
-		break;
-	default:
-		break;
-	}
-}
-
-void APlayerCharacter::InitASCActorInfo()
-{
-	if (AWallacePlayerState* WallacePS = GetPlayerState<AWallacePlayerState>())
-	{
-		WallacePS->GetAbilitySystemComponent()->InitAbilityActorInfo(WallacePS, this);
-	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

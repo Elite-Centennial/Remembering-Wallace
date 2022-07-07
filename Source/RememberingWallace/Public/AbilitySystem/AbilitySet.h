@@ -61,7 +61,7 @@ struct FAbilitySet_GameplayEffect
 	 * The level of the gameplay effect
 	 */
 	UPROPERTY(EditDefaultsOnly)
-	float EffectLevel;
+	float EffectLevel = 0.0f;
 };
 
 /**
@@ -84,13 +84,13 @@ struct FAbilitySet_GameplayAbility
 	 * The level of the gameplay ability
 	 */
 	UPROPERTY(EditDefaultsOnly)
-	int32 AbilityLevel;
+	int32 AbilityLevel = 0;
 
 	/**
 	 * Player input this ability is bound to
 	 */
 	UPROPERTY(EditDefaultsOnly)
-	EAbilityInputID InputID;
+	EAbilityInputID InputID = EAbilityInputID::None;
 };
 
 /**

@@ -44,7 +44,7 @@ struct INVENTORYSYSTEM_API FInventorySlot
 	int64 StackCount;
 
 	/**
-	 * Whether ths data is in a valid state (having an item instance assigned and a positive stack count)
+	 * Whether the data is in a valid state (having an item instance assigned and a positive stack count)
 	 */
 	bool IsValid() const { return Instance.Get() && StackCount > 0; }
 

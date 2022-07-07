@@ -23,8 +23,12 @@ UItemInstance* UItemInstance::CreateFromInstanceInit(const FItemInstanceInit& In
 	return Instance;
 }
 
-const FItemPropertyData* UItemInstance::GetPropertyData(
-	const TSubclassOf<UItemProperty> PropertyClass) const
+const UItemProperty* UItemInstance::GetProperty(const TSubclassOf<UItemProperty> PropertyClass) const
+{
+	return Definition->GetProperty(PropertyClass);
+}
+
+const FItemPropertyData* UItemInstance::GetPropertyData(const TSubclassOf<UItemProperty> PropertyClass) const
 {
 	const TUniquePtr<FItemPropertyData>* DataPtr = InstanceData.Find(PropertyClass->GetFName());
 	return DataPtr ? DataPtr->Get() : nullptr;

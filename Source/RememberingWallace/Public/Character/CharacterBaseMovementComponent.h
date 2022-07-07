@@ -29,11 +29,6 @@ struct REMEMBERINGWALLACE_API FCharacterGroundInfo
 	friend UCharacterBaseMovementComponent;
 
 	/**
-	 * Returns whether this data is from the proper update by UCharacterBaseMovementComponent
-	 */
-	bool IsValid() const;
-
-	/**
 	 * Whether this info is up to date
 	 */
 	bool IsUpToDate() const { return LastUpdateFrame == GFrameCounter; }

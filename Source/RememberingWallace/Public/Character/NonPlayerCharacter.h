@@ -3,22 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystemInterface.h"
+#include "CharacterBase.h"
 #include "InventorySystemInterface.h"
-#include "GameFramework/PlayerState.h"
 
-#include "WallacePlayerState.generated.h"
+#include "NonPlayerCharacter.generated.h"
 
 class UEquipmentManagerComponent;
 class UInventoryComponent;
 class UWallaceAbilitySystemComponent;
 
 /**
- * The player state class that is used in this project
+ * Character class for non-player units like townspeople or enemies
  */
 UCLASS()
-class REMEMBERINGWALLACE_API AWallacePlayerState
-	: public APlayerState, public IAbilitySystemInterface, public IInventorySystemInterface
+class REMEMBERINGWALLACE_API ANonPlayerCharacter : public ACharacterBase
 {
 	GENERATED_BODY()
 
@@ -31,41 +29,36 @@ public:
 	/**
 	 * Constructor
 	 */
-	AWallacePlayerState(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-
-	/**
-	 * Return the ASC as the customized type for this project
-	 */
-	UWallaceAbilitySystemComponent* GetWallaceAbilitySystemComponent() const { return AbilitySystemComponent; }
-
-	/**
-	 * Return the equipment manager component
-	 */
-	UEquipmentManagerComponent* GetEquipmentManagerComponent() const { return EquipmentManagerComponent; }
-
-	// BEGIN IAbilitySystemInterface interface
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-	// END IAbilitySystemInterface interface
+	ANonPlayerCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	// BEGIN IInventorySystemInterface interface
 	virtual UInventoryComponent* GetInventoryComponent_Implementation() const override { return InventoryComponent; }
 	// END IInventorySystemInterface interface
 
+	// BEGIN ACharacterBase interface
+	virtual UWallaceAbilitySystemComponent* GetWallaceAbilitySystemComponent() const override { return AbilitySystemComponent; }
+	virtual UEquipmentManagerComponent* GetEquipmentManagerComponent() const override { return EquipmentManagerComponent; }
+	// END ACharacterBase interface
+
+	// BEGIN APawn interface
+	virtual void PossessedBy(AController* NewController) override;
+	// END APawn interface
+
 private:
 	/**
-	 * The ASC for the player
+	 * The ASC for this unit
 	 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AbilitySystem", meta = (AllowPrivateAccess))
 	TObjectPtr<UWallaceAbilitySystemComponent> AbilitySystemComponent;
 
 	/**
-	 * The inventory for the player
+	 * The inventory for this unit
 	 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess))
 	TObjectPtr<UInventoryComponent> InventoryComponent;
 
 	/**
-	 * Equipment manager for the player
+	 * Equipment manager for this unit
 	 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess))
 	TObjectPtr<UEquipmentManagerComponent> EquipmentManagerComponent;

@@ -9,7 +9,10 @@
 
 class UInventoryComponent;
 
-UINTERFACE(BlueprintType)
+/**
+ * Interface for returning an inventory component
+ */
+UINTERFACE(MinimalAPI, BlueprintType)
 class UInventorySystemInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -23,6 +26,6 @@ class INVENTORYSYSTEM_API IInventorySystemInterface
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory")
 	UInventoryComponent* GetInventoryComponent() const;
 };

@@ -100,6 +100,8 @@ UInventoryComponent::UInventoryComponent(const FObjectInitializer& ObjectInitial
 
 bool UInventoryComponent::HasInstance(const UItemInstance* Instance, int64 Count) const
 {
+	check(Instance);
+
 	// Check existence
 	if (Count < 0 || !Inventory.HasItem(Instance->GetDefinition()))
 	{
@@ -138,6 +140,8 @@ bool UInventoryComponent::HasInstance(const UItemInstance* Instance, int64 Count
 
 bool UInventoryComponent::HasDefinition(const UItemDefinition* Definition, int64 Count) const
 {
+	check(Definition);
+
 	// Check existence
 	if (Count < 0 || !Inventory.HasItem(Definition))
 	{
@@ -176,6 +180,8 @@ bool UInventoryComponent::HasDefinition(const UItemDefinition* Definition, int64
 
 bool UInventoryComponent::HasItemTag(const FGameplayTag& ItemTag, int64 Count) const
 {
+	check(ItemTag.IsValid());
+
 	// Check existence
 	if (Count < 0 || !Inventory.HasItem(ItemTag))
 	{
@@ -343,6 +349,8 @@ void UInventoryComponent::AddDefinition(const UItemDefinition* Definition, int64
 
 UItemInstance* UInventoryComponent::RemoveInstance(const UItemInstance* Instance, int64 Count)
 {
+	check(Instance);
+
 	if (Count <= 0)
 	{
 		return nullptr;
@@ -387,8 +395,11 @@ UItemInstance* UInventoryComponent::RemoveInstance(const UItemInstance* Instance
 	return RemovedInstance;
 }
 
+// TODO: Create a new item instance for the removed items? What should we assign to the outer UObject of that?
 UItemInstance* UInventoryComponent::RemoveDefinition(const UItemDefinition* Definition, int64 Count)
 {
+	check(Definition);
+
 	if (Count <= 0)
 	{
 		return nullptr;

@@ -10,7 +10,7 @@
 /**
  * Developer settings related to the characters
  */
-UCLASS(Config = "Game", meta = (DisplayName = "Characters"))
+UCLASS(Config = "Game", DefaultConfig, meta = (DisplayName = "Characters"))
 class REMEMBERINGWALLACE_API UDeveloperSettings_Characters final : public UDeveloperSettingsBackedByCVars
 {
 	GENERATED_BODY()
@@ -27,6 +27,6 @@ public:
 	 * This is used for playing a smooth landing animation. This value should be larger than the maximum height of the
 	 * character in the landing animation.
 	 */
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UPROPERTY(GlobalConfig, EditDefaultsOnly, Category = "Movement")
 	float GroundTraceDistance;
 };
