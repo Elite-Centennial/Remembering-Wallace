@@ -8,6 +8,16 @@ public class RememberingWallace : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay" });
+		PublicDependencyModuleNames.AddRange(new[]
+		{
+			"Core",
+			"CoreUObject",
+			"Engine",
+			"InputCore",
+			"GameplayTags",
+			"GameplayTasks",
+			"GameplayAbilities",
+			"DeveloperSettings",
+		});
 	}
 }

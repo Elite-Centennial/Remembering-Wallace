@@ -8,6 +8,7 @@
 #include "CharacterBase.generated.h"
 
 class ACharacterBase;
+class UCharacterBaseMovementComponent;
 
 /**
  * Event dispatcher for when weapon draw is requested
@@ -29,41 +30,24 @@ enum class ECharacterWeaponState : uint8
 };
 
 /**
- * Base character class for all character classes
+ * Abstract base character class for all character classes
  *
- * This class mostly consists of common functionalities such as combat.
+ * This class mostly consists of common functionalities such as combat. Child classes must implement InitASCActorInfo
+ * method.
  */
-UCLASS()
+UCLASS(Abstract)
 class REMEMBERINGWALLACE_API ACharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 
-	/**
-	 * State of the weapon (drawn, sheathed, or in transition)
-	 */
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-	ECharacterWeaponState WeaponState;
-
-	/**
-	 * Event for when a request to draw the weapon is successfully made
-	 *
-	 * This is intended to be bound with a function that plays an animation montage.
-	 */
-	UPROPERTY(BlueprintAssignable, Category = "Weapon", DisplayName = "On Weapon Draw Requested",
-		meta = (AllowPrivateAccess = "true"))
-	FCharacterWeaponDrawRequested WeaponDrawRequestedDelegate;
-
-	/**
-	 * Event for when a request to sheathe the weapon is successfully made
-	 *
-	 * This is intended to be bound with a function that plays an animation montage.
-	 */
-	UPROPERTY(BlueprintAssignable, Category = "Weapon", DisplayName = "On Weapon Sheathe Requested",
-		meta = (AllowPrivateAccess = "true"))
-	FCharacterWeaponSheatheRequested WeaponSheatheRequestedDelegate;
-
 public:
-	ACharacterBase();
+	ACharacterBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	/**
+	 * Return the customized character movement component
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Character")
+	UCharacterBaseMovementComponent* GetCharacterBaseMovement() const;
 
 	/**
 	 * Return the weapon state
@@ -104,6 +88,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void HandleWeaponSheathingFinished();
 
+	// BEGIN APawn interface
+	virtual void PossessedBy(AController* NewController) override;
+	// END APawn interface
+
 protected:
 	/**
 	 * Request to start drawing the weapon
@@ -132,4 +120,37 @@ protected:
 	 */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
 	void OnWeaponReleased();
+
+	/**
+	 * Initialize the associated ASC with the actor info
+	 *
+	 * This must be implemented by child classes since this class does not have any knowledge about how to access the
+	 * ASC.
+	 */
+	virtual void InitASCActorInfo() {}
+
+private:
+	/**
+	 * State of the weapon (drawn, sheathed, or in transition)
+	 */
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	ECharacterWeaponState WeaponState;
+
+	/**
+	 * Event for when a request to draw the weapon is successfully made
+	 *
+	 * This is intended to be bound with a function that plays an animation montage.
+	 */
+	UPROPERTY(BlueprintAssignable, Category = "Weapon", DisplayName = "On Weapon Draw Requested",
+		meta = (AllowPrivateAccess = "true"))
+	FCharacterWeaponDrawRequested WeaponDrawRequestedDelegate;
+
+	/**
+	 * Event for when a request to sheathe the weapon is successfully made
+	 *
+	 * This is intended to be bound with a function that plays an animation montage.
+	 */
+	UPROPERTY(BlueprintAssignable, Category = "Weapon", DisplayName = "On Weapon Sheathe Requested",
+		meta = (AllowPrivateAccess = "true"))
+	FCharacterWeaponSheatheRequested WeaponSheatheRequestedDelegate;
 };

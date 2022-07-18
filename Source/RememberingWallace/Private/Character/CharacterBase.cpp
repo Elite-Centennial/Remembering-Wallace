@@ -2,9 +2,12 @@
 
 #include "Character/CharacterBase.h"
 
+#include "Character/CharacterBaseMovementComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-ACharacterBase::ACharacterBase()
+ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer
+		.SetDefaultSubobjectClass<UCharacterBaseMovementComponent>(CharacterMovementComponentName))
 {
 	// Character should rotate according to the move direction by default
 	bUseControllerRotationPitch = false;
@@ -14,6 +17,11 @@ ACharacterBase::ACharacterBase()
 
 	// Weapon is sheathed by default
 	WeaponState = ECharacterWeaponState::Sheathed;
+}
+
+UCharacterBaseMovementComponent* ACharacterBase::GetCharacterBaseMovement() const
+{
+	return CastChecked<UCharacterBaseMovementComponent>(GetCharacterMovement());
 }
 
 void ACharacterBase::HandleWeaponGrabbed()
@@ -50,6 +58,13 @@ void ACharacterBase::HandleWeaponSheathingFinished()
 	}
 }
 
+void ACharacterBase::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	InitASCActorInfo();
+}
+
 void ACharacterBase::RequestWeaponDraw()
 {
 	if (WeaponState != ECharacterWeaponState::Sheathed)
@@ -61,7 +76,7 @@ void ACharacterBase::RequestWeaponDraw()
 
 	// Character rotation should follow the camera when the weapon is drawn
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	bUseControllerRotationYaw = true;
 
 	if (WeaponDrawRequestedDelegate.IsBound())
 	{
@@ -80,7 +95,7 @@ void ACharacterBase::RequestWeaponSheath()
 
 	// Character should face the movement direction when the weapon is sheathed
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	bUseControllerRotationYaw = false;
 
 	if (WeaponSheatheRequestedDelegate.IsBound())
 	{
