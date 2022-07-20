@@ -3,17 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "RememberingWallaceTags.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 #include "CharacterBaseMovementComponent.generated.h"
 
 class UCharacterBaseMovementComponent;
-
-/**
- * Gameplay tag for the state where movement is not allowed
- */
-REMEMBERINGWALLACE_API DECLARE_GAMEPLAY_TAG(GTag_Unit_State_Immobilized);
 
 /**
  * Information about the ground trace of the character

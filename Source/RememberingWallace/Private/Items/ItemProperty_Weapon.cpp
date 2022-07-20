@@ -6,31 +6,80 @@
 #include "ItemInstance.h"
 #include "RememberingWallace.h"
 #include "AbilitySystem/WallaceAbilitySystemComponent.h"
-#include "Development/DeveloperSettings_Equipment.h"
+#include "Development/ProjectSettings_Equipment.h"
 #include "Items/EquipmentManagerComponent.h"
 #include "Items/WeaponItemActor.h"
+
+namespace RememberingWallace::Weapon
+{
+	/**
+	 * Internal helper function that retrieves the default settings for the given weapon type; can be null
+	 */
+	const FWeaponDefaultSettings* GetDefaultSettings(const FGameplayTag& WeaponType)
+	{
+		return UProjectSettings_Equipment::Get()->WeaponDefaultSettings.Find(WeaponType);
+	}
+}
 
 UItemProperty_Weapon::UItemProperty_Weapon()
 {
 }
 
-TSubclassOf<UAnimInstance> UItemProperty_Weapon::GetAnimClassToLink(const USkeleton* Skeleton) const
+FName UItemProperty_Weapon::GetActorPositionSocketName(const EWeaponState Position) const
 {
-	if (const TSubclassOf<UAnimInstance>* AnimClassOverride = AnimClassToLinkOverrides.Find(Skeleton))
+	FName SocketName = ActorSocketNamesOverride.GetSocketNameForPosition(Position);
+
+	if (SocketName.IsNone())
 	{
-		// TODO: null check?
-		return *AnimClassOverride;
+		if (const FWeaponDefaultSettings* Settings = RememberingWallace::Weapon::GetDefaultSettings(WeaponType))
+		{
+			SocketName = Settings->SocketNames.GetSocketNameForPosition(Position);
+		}
 	}
 
-	const UDeveloperSettings_Equipment* EquipmentSettings = GetDefault<UDeveloperSettings_Equipment>();
-	check(EquipmentSettings);
+	return MoveTemp(SocketName);
+}
 
-	if (const auto* WeaponTypeToAnimClassMap = EquipmentSettings->AnimClassToLinkPerWeaponType.Find(Skeleton))
+UAnimMontage* UItemProperty_Weapon::GetDrawMontage() const
+{
+	if (DrawMontageOverride)
 	{
-		if (const TSoftClassPtr<UAnimInstance>* AnimClass = WeaponTypeToAnimClassMap->Map.Find(WeaponType))
-		{
-			return AnimClass->LoadSynchronous();
-		}
+		return DrawMontageOverride;
+	}
+
+	if (const FWeaponDefaultSettings* Settings = RememberingWallace::Weapon::GetDefaultSettings(WeaponType))
+	{
+		return Settings->DrawMontage.LoadSynchronous();
+	}
+
+	return nullptr;
+}
+
+UAnimMontage* UItemProperty_Weapon::GetSheatheMontage() const
+{
+	if (SheatheMontageOverride)
+	{
+		return SheatheMontageOverride;
+	}
+
+	if (const FWeaponDefaultSettings* Settings = RememberingWallace::Weapon::GetDefaultSettings(WeaponType))
+	{
+		return Settings->SheatheMontage.LoadSynchronous();
+	}
+
+	return nullptr;
+}
+
+TSubclassOf<UAnimInstance> UItemProperty_Weapon::GetAnimClassToLink() const
+{
+	if (AnimClassToLinkOverride)
+	{
+		return AnimClassToLinkOverride;
+	}
+
+	if (const FWeaponDefaultSettings* Settings = RememberingWallace::Weapon::GetDefaultSettings(WeaponType))
+	{
+		return Settings->AnimClassToLink.LoadSynchronous();
 	}
 
 	return nullptr;
@@ -42,7 +91,7 @@ void UItemProperty_Weapon::Equip(UItemInstance* WeaponInstance, UEquipmentManage
 	check(EquipmentManager);
 
 	// Get the weapon property data saved in the item instance
-	FItemPropertyData_Weapon* InstanceData = WeaponInstance->GetPropertyData<UItemProperty_Weapon>();
+	FItemPropertyData_Weapon* InstanceData = WeaponInstance->GetWeaponPropertyData();
 
 	// If the item instance is a weapon, it MUST have a weapon property data (see CreateNewDataInstance method below)
 	if (!InstanceData)
@@ -99,14 +148,17 @@ void UItemProperty_Weapon::Equip(UItemInstance* WeaponInstance, UEquipmentManage
 	}
 
 	// Apply the ability set
-	if (AbilitySet && EquipmentManager->GetAbilitySystemComponent())
+	if (!AbilitySets.IsEmpty() && EquipmentManager->GetAbilitySystemComponent())
 	{
 		// Clean up the ability set's granted handles saved in this weapon instance just in case
-		// If there is data for a different (and valid) ASC, UAbilitySet::Grant does not do anything.
-		InstanceData->GrantedHandles.TakeBack();
+		InstanceData->CleanUpGrantedHandles();
+		InstanceData->GrantedHandles.AddDefaulted(AbilitySets.Num());
 
-		// Grant the ability set to the weapon owner's ASC
-		AbilitySet->Grant(EquipmentManager->GetAbilitySystemComponent(), &InstanceData->GrantedHandles);
+		// Grant the ability sets to the weapon owner's ASC
+		for (int32 Idx = 0; Idx < AbilitySets.Num(); Idx++)
+		{
+			AbilitySets[Idx]->Grant(EquipmentManager->GetAbilitySystemComponent(), &InstanceData->GrantedHandles[Idx]);
+		}
 	}
 
 	// Notify the spawned actor that the weapon is equipped
@@ -122,7 +174,7 @@ void UItemProperty_Weapon::Unequip(UItemInstance* WeaponInstance, const bool bDe
 	check(WeaponInstance);
 
 	// Get the weapon property data saved in the item instance
-	FItemPropertyData_Weapon* InstanceData = WeaponInstance->GetPropertyData<UItemProperty_Weapon>();
+	FItemPropertyData_Weapon* InstanceData = WeaponInstance->GetWeaponPropertyData();
 
 	// If the item instance is a weapon, it MUST have a weapon property data (see CreateNewDataInstance method below)
 	if (!InstanceData)
@@ -142,8 +194,8 @@ void UItemProperty_Weapon::Unequip(UItemInstance* WeaponInstance, const bool bDe
 		SpawnedActor->OnWeaponAboutToBeUnequipped(bDestroyActor);
 	}
 
-	// Take back the granted ability set
-	InstanceData->GrantedHandles.TakeBack();
+	// Take back the granted ability sets
+	InstanceData->CleanUpGrantedHandles();
 
 	// Destroy the actor if told to do so
 	if (bDestroyActor && SpawnedActor)
@@ -159,4 +211,14 @@ void UItemProperty_Weapon::Unequip(UItemInstance* WeaponInstance, const bool bDe
 FItemPropertyData* UItemProperty_Weapon::CreateNewDataInstance() const
 {
 	return new FItemPropertyData_Weapon();
+}
+
+void FItemPropertyData_Weapon::CleanUpGrantedHandles()
+{
+	for (FAbilitySetGrantedHandles& Handles : GrantedHandles)
+	{
+		Handles.TakeBack();
+	}
+
+	GrantedHandles.Reset();
 }

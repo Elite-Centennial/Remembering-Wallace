@@ -2,36 +2,114 @@
 
 #pragma once
 
-#include "NativeGameplayTags.h"
+#include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 
 /**
- * Declare a gameplay tag to be used in C++
- *
- * This should be used in header files. It enables other files that include the header file to use this tag.
+ * Get the gameplay tag for the specified path, defined in FWallaceTags
  */
-#define DECLARE_GAMEPLAY_TAG(TagName) \
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TagName)
+#define TAG(TagPath) (FWallaceTags::Get().TagPath)
+
+// Internal struct definitions for the tags structure
+namespace RememberingWallace::Tags
+{
+	// Base class for a collection of gameplay tags which namespace also corresponds to an explicit tag
+	struct FTagsWithRootTag
+	{
+		operator FGameplayTag() const { return Internal_RootTag; }
+		operator const FGameplayTag&() const { return Internal_RootTag; }
+		const FGameplayTag& GetTag() const { return Internal_RootTag; }
+
+	protected:
+		FGameplayTag Internal_RootTag;
+	};
+}
 
 /**
- * Define a gameplay tag that was declared in a header file
+ * A collection of all gameplay tags used in the native code
  *
- * This must be used in non-header files. DevComment must use TEXT("...") macro.
+ * Use the utility macro TAG this like: const FGameplayTag& WeaponDrawnTag = TAG(Weapon.State.Drawn);
  */
-#define DEFINE_GAMEPLAY_TAG(TagName, Tag, DevComment) \
-	FNativeGameplayTag TagName( \
-		UE_PLUGIN_NAME, UE_MODULE_NAME, Tag, DevComment, ENativeGameplayTagToken::PRIVATE_USE_MACRO_INSTEAD); \
-	static_assert(UE::GameplayTags::Private::HasFileExtension(__FILE__, ".cpp"), \
-		"UE_DEFINE_GAMEPLAY_TAG can only be used in .cpp files, if you're trying to share tags across modules, " \
-		"use UE_DECLARE_GAMEPLAY_TAG_EXTERN in the public header, and UE_DEFINE_GAMEPLAY_TAG in the private .cpp");
+struct FWallaceTags
+{
+	/**
+	 * Return the singleton instance of the collection of gameplay tags
+	 */
+	static const FWallaceTags& Get() { return Tags; }
 
-/**
- * Declare and define a gameplay tag to be used in that file only
- *
- * This must be used in non-header files. DevComment must use TEXT("...") macro.
- */
-#define DEFINE_INTERNAL_GAMEPLAY_TAG(TagName, Tag, DevComment) \
-	static FNativeGameplayTag TagName( \
-		UE_PLUGIN_NAME, UE_MODULE_NAME, Tag, DevComment, ENativeGameplayTagToken::PRIVATE_USE_MACRO_INSTEAD); \
-	static_assert(UE::GameplayTags::Private::HasFileExtension(__FILE__, ".cpp"), \
-		"UE_DEFINE_GAMEPLAY_TAG_STATIC can only be used in .cpp files, if you're trying to share tags across modules," \
-		" use UE_DECLARE_GAMEPLAY_TAG_EXTERN in the public header, and UE_DEFINE_GAMEPLAY_TAG in the private .cpp");
+	// "Ability": Tags for gameplay abilities
+	struct FAbility : RememberingWallace::Tags::FTagsWithRootTag
+	{
+		FAbility();
+
+		// "Ability.Action": Abilities that fire off one-time actions
+		struct FAction : FTagsWithRootTag
+		{
+			FAction();
+			FGameplayTag Weapon; // "Ability.Action.Weapon": Abilities that switch weapon state
+		} Action;
+	} Ability;
+
+	// "Event": Tags for gameplay events
+	struct FEvent : RememberingWallace::Tags::FTagsWithRootTag
+	{
+		FEvent();
+
+		// "Event.Combat": Gameplay events related to combat
+		struct FCombat : FTagsWithRootTag
+		{
+			FCombat();
+			FGameplayTag Damaged; // "Event.Combat.Damaged": Took a damage
+			FGameplayTag DidDamage; // "Event.Combat.DidDamage": Applied a damage
+			FGameplayTag Healed; // "Event.Combat.Healed": Got a heal
+			FGameplayTag DidHeal; // "Event.Combat.DidHeal": Applied a heal
+		} Combat;
+
+		// "Event.Unit": Gameplay events where something happened to a combat unit
+		struct FUnit : FTagsWithRootTag
+		{
+			FUnit();
+			FGameplayTag OutOfHealth; // "Event.Unit.OutOfHealth": Health dropped to zero
+			FGameplayTag OutOfMana; // "Event.Unit.OutOfMana": Mana dropped to zero
+		} Unit;
+	} Event;
+
+	// "Unit": Tags related to combat units
+	struct FUnit : RememberingWallace::Tags::FTagsWithRootTag
+	{
+		FUnit();
+
+		// "Unit.State": States for units
+		struct FState : FTagsWithRootTag
+		{
+			FState();
+			FGameplayTag Immobilized; // "Unit.State.Immobilized": Movement is not allowed
+		} State;
+	} Unit;
+
+	// "Weapon": Tags for weapons
+	struct FWeapon : RememberingWallace::Tags::FTagsWithRootTag
+	{
+		FWeapon();
+
+		// "Weapon.State": Weapon states
+		struct FState : FTagsWithRootTag
+		{
+			FState();
+			FGameplayTag Drawing; // "Weapon.State.Drawing"
+			FGameplayTag Drawn; // "Weapon.State.Drawn"
+			FGameplayTag Sheathing; // "Weapon.State.Sheathing"
+			FGameplayTag Sheathed; // "Weapon.State.Sheathed"
+			const FGameplayTagContainer& GetAll() const; // All weapon state tags
+		} State;
+
+		// "Weapon.Type": Weapon types assigned to weapon item property
+		struct FType : FTagsWithRootTag
+		{
+			FType();
+		} Type;
+	} Weapon;
+
+private:
+	static const FWallaceTags Tags; // Singleton instance
+};

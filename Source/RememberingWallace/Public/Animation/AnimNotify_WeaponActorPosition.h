@@ -7,23 +7,14 @@
 
 #include "AnimNotify_WeaponActorPosition.generated.h"
 
+enum class EWeaponState : uint8;
 class UAnimInstance;
 class UItemInstance;
 
 /**
- * How to figure out the name of the socket the weapon actor should be attached to
- */
-UENUM(BlueprintType, Category = "Weapon|Animation")
-enum class EWeaponActorPosition : uint8
-{
-	// Use SheathedSocketName defined in the weapon item property
-	Sheathed,
-	// Use DrawnSocketName defined in the weapon item property
-	Drawn,
-};
-
-/**
  * Animation notify that is used to place the weapon actor at the specified socket
+ *
+ * This also takes care of linking/unlinking anim BP classes according to the held weapon. This can be disabled.
  */
 UCLASS(meta = (DisplayName = "Set Weapon Actor Position"))
 class REMEMBERINGWALLACE_API UAnimNotify_WeaponActorPosition final : public UAnimNotify
@@ -47,18 +38,12 @@ protected:
 	/**
 	 * The position the weapon actor should be attached to
 	 *
-	 * This is ignored when using a custom socket.
+	 * This is ignored when using a custom socket. However, it will determine if the anim BP class will be linked or
+	 * unlinked in case custom anim BP class is not enabled and bAdjustAnimClassLink is set to true. Drawn will link the
+	 * anim BP, while Sheathed will unlink it.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
-	EWeaponActorPosition WeaponActorPosition;
-
-	/**
-	 * Whether the appropriate anim BP class should be automatically linked or unlinked
-	 *
-	 * This is ignored when using a custom socket.
-	 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
-	bool bAdjustAnimClassLink;
+	EWeaponState WeaponActorPosition;
 
 	/**
 	 * If set to true, the custom socket name will be used instead of sheathed/drawn positions
@@ -73,19 +58,27 @@ protected:
 	FName CustomSocketName;
 
 	/**
-	 * Whether to link or unlink the anim BP class set below
-	 *
-	 * If true, the anim BP class is linked. If false, it is unlinked. To disable this feature, simply set the
-	 * CustomAnimClassToLink to None.
+	 * If set to true, the custom anim BP class will be used to link/unlink instead of the one from the weapon
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (EditCondition = "bUseCustomSocket"))
-	bool bLinkCustomAnimClass;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (InlineEditConditionToggle))
+	bool bUseCustomAnimClass;
 
 	/**
-	 * Anim BP class to link/unlink, ignored when not set
+	 * Custom anim BP class to link/unlink, ignored when not set
+	 *
+	 * You can enable this and set the value to none to disable anim BP linking as a whole.
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (EditCondition = "bUseCustomSocket"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (EditCondition = "bUseCustomAnimClass"))
 	TSubclassOf<UAnimInstance> CustomAnimClassToLink;
+
+	/**
+	 * Whether to link or unlink the anim BP class set below
+	 *
+	 * If true, the anim BP class is linked. If false, it is unlinked. To disable this feature, simply set
+	 * CustomAnimClassToLink to None.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (EditCondition = "bUseCustomAnimClass"))
+	bool bLinkCustomAnimClass;
 
 private:
 	/**

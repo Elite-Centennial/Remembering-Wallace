@@ -7,6 +7,7 @@
 #include "InventorySystemInterface.h"
 #include "ItemInstance.h"
 #include "RememberingWallace.h"
+#include "RememberingWallaceTags.h"
 #include "AbilitySystem/WallaceAbilitySystemComponent.h"
 #include "Items/ItemProperty_Weapon.h"
 #include "Items/WeaponItemActor.h"
@@ -16,6 +17,16 @@ UEquipmentManagerComponent::UEquipmentManagerComponent(const FObjectInitializer&
 {
 	// Make the engine call the initialize method
 	bWantsInitializeComponent = true;
+}
+
+EWeaponState UEquipmentManagerComponent::GetCurrentWeaponState() const
+{
+	if (!AbilitySystemComponent)
+	{
+		return EWeaponState::Sheathed;
+	}
+
+	return UWeaponStateLibrary::GetWeaponStateFromTagOwner(AbilitySystemComponent.Get());
 }
 
 void UEquipmentManagerComponent::EquipWeapon(
@@ -59,7 +70,7 @@ void UEquipmentManagerComponent::EquipWeapon(
 	// Clean up the data from previously equipped weapon if applicable
 	if (PreviousWeapon)
 	{
-		if (const UItemProperty_Weapon* OldProperty = PreviousWeapon->GetProperty<UItemProperty_Weapon>())
+		if (const UItemProperty_Weapon* OldProperty = PreviousWeapon->GetWeaponProperty())
 		{
 			OldProperty->Unequip(PreviousWeapon, bDestroyActor);
 		}
@@ -73,6 +84,8 @@ void UEquipmentManagerComponent::EquipWeapon(
 		// Execute any logics needed for equipping the weapon
 		NewProperty->Equip(NewWeapon, this);
 	}
+
+	// TODO: weapon changed delegate -> ability task for listening for this
 }
 
 bool UEquipmentManagerComponent::EquipWeapon(UItemInstance* NewWeapon, const bool bDestroyActor)

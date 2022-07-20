@@ -5,6 +5,7 @@
 #include "ItemInstance.h"
 #include "Items/EquipmentManagerComponent.h"
 #include "Items/ItemProperty_Weapon.h"
+#include "Items/WeaponState.h"
 
 AWeaponItemActor::AWeaponItemActor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -15,7 +16,7 @@ const UItemProperty_Weapon* AWeaponItemActor::GetWeaponItemProperty() const
 {
 	if (const UItemInstance* Instance = GetItemInstance())
 	{
-		return Instance->GetProperty<UItemProperty_Weapon>();
+		return Instance->GetWeaponProperty();
 	}
 
 	return nullptr;
@@ -35,7 +36,7 @@ const FItemPropertyData_Weapon* AWeaponItemActor::GetWeaponItemPropertyData() co
 {
 	if (const UItemInstance* Instance = GetItemInstance())
 	{
-		return Instance->GetPropertyData<UItemProperty_Weapon>();
+		return Instance->GetWeaponPropertyData();
 	}
 
 	return nullptr;
@@ -45,29 +46,60 @@ FItemPropertyData_Weapon* AWeaponItemActor::GetWeaponItemPropertyData()
 {
 	if (UItemInstance* Instance = GetItemInstance())
 	{
-		return Instance->GetPropertyData<UItemProperty_Weapon>();
+		return Instance->GetWeaponPropertyData();
 	}
 
 	return nullptr;
 }
 
+bool AWeaponItemActor::AttachToOwnerCharacter(const EWeaponState Position)
+{
+	if (const UEquipmentManagerComponent* EquipmentManager = GetEquipmentManager())
+	{
+		if (USkeletalMeshComponent* SkeletalMeshComponent = EquipmentManager->GetSkeletalMeshComponent())
+		{
+			// Attach to the character's main skeletal mesh component
+			// We already know that weapon item property is not null because the equipment manager is not null which in
+			// turn means that weapon property data is not null.
+			AttachToComponent(
+				SkeletalMeshComponent,
+				FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+				GetWeaponItemProperty()->GetActorPositionSocketName(Position));
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool AWeaponItemActor::DetachFromOwnerCharacter()
+{
+	if (const UEquipmentManagerComponent* EquipmentManager = GetEquipmentManager())
+	{
+		if (const USkeletalMeshComponent* SkeletalMeshComponent = EquipmentManager->GetSkeletalMeshComponent())
+		{
+			// Detach from the character's main skeletal mesh component
+			if (SkeletalMeshComponent == RootComponent->GetAttachParent())
+			{
+				DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 void AWeaponItemActor::Native_OnWeaponEquipped()
 {
-	const UItemProperty_Weapon* WeaponProperty = GetWeaponItemProperty();
-	const FItemPropertyData_Weapon* WeaponData = GetWeaponItemPropertyData();
-	check(WeaponProperty && WeaponData);
+	EWeaponState CurrentWeaponState = EWeaponState::Sheathed;
 
-	const UEquipmentManagerComponent* EquipmentManager = WeaponData->EquipmentManager.Get();
-	check(EquipmentManager); // Does not make sense to equip this weapon without the equipment manager
-
-	if (USkeletalMeshComponent* SkeletalMeshComponent = EquipmentManager->GetSkeletalMeshComponent())
+	if (const UEquipmentManagerComponent* EquipmentManager = GetEquipmentManager())
 	{
-		// Attach to the character's main skeletal mesh component
-		AttachToComponent(
-			SkeletalMeshComponent,
-			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-			WeaponProperty->GetSheathedSocketName());
+		CurrentWeaponState = EquipmentManager->GetCurrentWeaponState();
 	}
+
+	AttachToOwnerCharacter(CurrentWeaponState);
 }
 
 void AWeaponItemActor::Native_OnWeaponAboutToBeUnequipped(const bool bWillBeDestroyed)
@@ -77,21 +109,7 @@ void AWeaponItemActor::Native_OnWeaponAboutToBeUnequipped(const bool bWillBeDest
 		return;
 	}
 
-	const UItemProperty_Weapon* WeaponProperty = GetWeaponItemProperty();
-	const FItemPropertyData_Weapon* WeaponData = GetWeaponItemPropertyData();
-	check(WeaponProperty && WeaponData);
-
-	const UEquipmentManagerComponent* EquipmentManager = WeaponData->EquipmentManager.Get();
-	check(EquipmentManager); // This must still be valid because other unequip logics have not run yet
-
-	if (const USkeletalMeshComponent* SkeletalMeshComponent = EquipmentManager->GetSkeletalMeshComponent())
-	{
-		// Detach from the character's main skeletal mesh component
-		if (RootComponent->GetAttachParent() == SkeletalMeshComponent)
-		{
-			DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		}
-	}
+	DetachFromOwnerCharacter();
 }
 
 void AWeaponItemActor::OnWeaponEquipped()

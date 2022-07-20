@@ -53,7 +53,7 @@ public:
 
 	// BEGIN ACharacterBase interface
 	virtual UWallaceAbilitySystemComponent* GetWallaceAbilitySystemComponent() const override;
-	virtual UEquipmentManagerComponent* GetEquipmentManagerComponent() const override;
+	virtual UEquipmentManagerComponent* GetEquipmentManager() const override;
 	// END ACharacterBase interface
 
 	// BEGIN APawn interface

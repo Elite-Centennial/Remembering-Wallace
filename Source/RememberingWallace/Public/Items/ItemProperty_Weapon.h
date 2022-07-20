@@ -5,9 +5,16 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "ItemProperty.h"
+#include "WeaponState.h"
 #include "AbilitySystem/AbilitySet.h"
 
 #include "ItemProperty_Weapon.generated.h"
+
+// Utility macro for getting weapon property from an item definition or an item instance
+#define GetWeaponProperty() GetProperty<UItemProperty_Weapon>()
+
+// Utility macro for getting weapon property data from an item instance
+#define GetWeaponPropertyData() GetPropertyData<UItemProperty_Weapon>()
 
 class AWeaponItemActor;
 class UAnimInstance;
@@ -39,45 +46,48 @@ public:
 	UItemProperty_Weapon();
 
 	/**
-	 * Return the actor class to spawn in world
-	 */
-	TSubclassOf<AWeaponItemActor> GetActorToSpawn() const { return ActorToSpawn; }
-
-	/**
-	 * Return the name of the socket the actor should be attached to when sheathed
-	 */
-	const FName& GetSheathedSocketName() const { return SheathedSocketName; }
-
-	/**
-	 * Return the name of the socket the actor should be attached to when drawn out
-	 */
-	const FName& GetDrawnSocketName() const { return DrawnSocketName; }
-
-	/**
 	 * Return the type of this weapon
 	 */
 	const FGameplayTag& GetWeaponType() const { return WeaponType; }
 
 	/**
-	 * Return the ability set to be granted when equipped
+	 * Return the trait tags of this weapon
 	 */
-	const UAbilitySet* GetAbilitySet() const { return AbilitySet; }
+	const FGameplayTagContainer& GetWeaponTraits() const { return WeaponTraits; }
+
+	/**
+	 * Return the ability sets to be granted when equipped
+	 */
+	const TArray<TObjectPtr<UAbilitySet>>& GetAbilitySets() const { return AbilitySets; }
+
+	/**
+	 * Return the actor class to spawn in world
+	 */
+	TSubclassOf<AWeaponItemActor> GetActorToSpawn() const { return ActorToSpawn; }
+
+	/**
+	 * Return the name of the socket the actor should be attached to
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon|Actor")
+	FName GetActorPositionSocketName(EWeaponState Position) const;
 
 	/**
 	 * Return the animation montage to use when drawing out this weapon
 	 */
-	UAnimMontage* GetDrawMontage() const { return DrawMontage; }
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon|Animation")
+	UAnimMontage* GetDrawMontage() const;
 
 	/**
 	 * Return the animation montage to use when sheathing this weapon
 	 */
-	UAnimMontage* GetSheatheMontage() const { return SheatheMontage; }
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon|Animation")
+	UAnimMontage* GetSheatheMontage() const;
 
 	/**
 	 * Return the animation blueprint class to link when the weapon is drawn out
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon|Animation")
-	TSubclassOf<UAnimInstance> GetAnimClassToLink(const USkeleton* Skeleton) const;
+	TSubclassOf<UAnimInstance> GetAnimClassToLink() const;
 
 	/**
 	 * Apply the gameplay-mechanics-wise effects for equipping this weapon
@@ -98,56 +108,62 @@ public:
 
 protected:
 	/**
-	 * The actor class to use to spawn when the weapon is equipped
-	 */
-	// TODO: Move this to a new item property class for more general usage
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Actor")
-	TSubclassOf<AWeaponItemActor> ActorToSpawn;
-
-	/**
-	 * The name of the socket the weapon actor should be attached to when it is sheathed
-	 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Actor")
-	FName SheathedSocketName;
-
-	/**
-	 * The name of the socket the weapon actor should be attached to when it is drawn out
-	 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Actor")
-	FName DrawnSocketName;
-
-	/**
-	 * The type of this weapon
+	 * The type of this weapon (must start with "Weapon.Type")
+	 *
+	 * This is used to figure out several things related to the position of the actor and what animations to play.
+	 * Typically, we'll want each weapon type to be only associated with one skeleton or a set of skeletons that are
+	 * compatible to each other. Otherwise, playing animation montages and linking/unlinking anim BP classes won't work.
+	 * To see what things are affected by this value, take a look at the equipment section in the project settings.
 	 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (Categories = "Weapon.Type"))
 	FGameplayTag WeaponType;
 
 	/**
-	 * Ability set to grant when this weapon is equipped
+	 * Tags that represent the traits of this weapon (must start with "Weapon", e.g. "Weapon.Shape.Curved")
+	 *
+	 * Currently NOT functional.
+	 * TODO: apply weapon traits to owner when equipped
+	 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (Categories = "Weapon"))
+	FGameplayTagContainer WeaponTraits;
+
+	/**
+	 * Ability sets to grant when this weapon is equipped
 	 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	TObjectPtr<UAbilitySet> AbilitySet;
+	TArray<TObjectPtr<UAbilitySet>> AbilitySets;
 
 	/**
-	 * Animation montage to use when drawing out this weapon
+	 * The actor class to use to spawn when the weapon is equipped
 	 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
-	TObjectPtr<UAnimMontage> DrawMontage;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	TSubclassOf<AWeaponItemActor> ActorToSpawn;
 
 	/**
-	 * Animation montage to use when sheathing this weapon
+	 * Names of sockets the weapon actor should be attached to; overrides the default in project settings
 	 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
-	TObjectPtr<UAnimMontage> SheatheMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Overrides", AdvancedDisplay, DisplayName = "Actor Socket Names")
+	FWeaponActorSocketNames ActorSocketNamesOverride;
 
 	/**
-	 * Animation blueprint class to link when this weapon is drawn out
-	 *
-	 * This overrides the settings in UDeveloperSettings_Equipment just for this weapon.
+	 * Animation montage to use when drawing out this weapon; overrides the default in project settings
 	 */
-	// TODO: Change to a plain anim BP class? Or change the montages to a map?
-	UPROPERTY(EditDefaultsOnly, Category = "Animation", AdvancedDisplay, NoClear)
-	TMap<TObjectPtr<USkeleton>, TSubclassOf<UAnimInstance>> AnimClassToLinkOverrides;
+	UPROPERTY(EditDefaultsOnly, Category = "Overrides", AdvancedDisplay, DisplayName = "Draw Montage")
+	TObjectPtr<UAnimMontage> DrawMontageOverride;
+
+	/**
+	 * Animation montage to use when sheathing this weapon; overrides the default in project settings
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Overrides", AdvancedDisplay, DisplayName = "Sheathe Montage")
+	TObjectPtr<UAnimMontage> SheatheMontageOverride;
+
+	/**
+	 * Animation blueprint class to link when this weapon is drawn out; overrides the default in project settings
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Overrides", AdvancedDisplay, DisplayName = "Anim BP To Link")
+	TSubclassOf<UAnimInstance> AnimClassToLinkOverride;
+
+	// TODO: data validation
 };
 
 /**
@@ -173,16 +189,15 @@ struct REMEMBERINGWALLACE_API FItemPropertyData_Weapon : public FItemPropertyDat
 	TWeakObjectPtr<AWeaponItemActor> SpawnedActor;
 
 	/**
-	 * Handles for the granted ability set when equipped
+	 * Handles for the granted ability sets when equipped
 	 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	FAbilitySetGrantedHandles GrantedHandles;
+	TArray<FAbilitySetGrantedHandles> GrantedHandles;
 
 	/**
-	 * Class of the animation blueprint that was linked when the weapon was drawn out
+	 * Take back all granted ability sets and clean up the array
 	 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
-	TSubclassOf<UAnimInstance> LinkedAnimClass;
+	void CleanUpGrantedHandles();
 
 	// BEGIN FItemPropertyData interface
 	virtual UScriptStruct* GetScriptStruct() const override { return StaticStruct(); }

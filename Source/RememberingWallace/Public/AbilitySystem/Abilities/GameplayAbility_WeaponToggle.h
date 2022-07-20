@@ -4,36 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameplayAbilityBase.h"
-#include "RememberingWallaceTags.h"
 
 #include "GameplayAbility_WeaponToggle.generated.h"
 
 class UAnimMontage;
-
-/**
- * Gameplay tag for abilities that switch weapon state
- */
-REMEMBERINGWALLACE_API DECLARE_GAMEPLAY_TAG(GTag_Ability_Action_Weapon);
-
-/**
- * Gameplay tag for the state where the weapon is sheathed
- */
-REMEMBERINGWALLACE_API DECLARE_GAMEPLAY_TAG(GTag_Unit_State_Weapon_Sheathed);
-
-/**
- * Gameplay tag for the state where the weapon is being drawn out
- */
-REMEMBERINGWALLACE_API DECLARE_GAMEPLAY_TAG(GTag_Unit_State_Weapon_Drawing);
-
-/**
- * Gameplay tag for the state where the weapon is drawn out
- */
-REMEMBERINGWALLACE_API DECLARE_GAMEPLAY_TAG(GTag_Unit_State_Weapon_Drawn);
-
-/**
- * Gameplay tag for the state where the weapon is being sheathed
- */
-REMEMBERINGWALLACE_API DECLARE_GAMEPLAY_TAG(GTag_Unit_State_Weapon_Sheathing);
+class UItemProperty_Weapon;
 
 /**
  * Base class for abilities for drawing/sheathing weapons
@@ -70,6 +45,12 @@ protected:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Ability|Weapon")
 	void RemoveWeaponDrawnTag();
+
+	/**
+	 * Get the weapon item property for the currently equipped weapon
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Ability|Weapon")
+	const UItemProperty_Weapon* GetCurrentWeaponProperty() const;
 
 	/**
 	 * Get the anim montage for drawing out the currently equipped weapon

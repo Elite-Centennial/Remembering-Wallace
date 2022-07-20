@@ -3,8 +3,8 @@
 #include "AbilitySystem/Attributes/HealthAttributeSet.h"
 
 #include "GameplayEffectExtension.h"
+#include "RememberingWallaceTags.h"
 #include "AbilitySystem/GameplayEventHelper.h"
-#include "AbilitySystem/GameplayEventTags.h"
 
 UHealthAttributeSet::UHealthAttributeSet()
 	: Health(100.0f),
@@ -63,8 +63,8 @@ void UHealthAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 		RememberingWallace::GameplayEvent::SendEventsForAttrGEExecute(
 			&Data,
 			GetOwningAbilitySystemComponentChecked(),
-			GTag_Event_Combat_DidDamage,
-			GTag_Event_Combat_Damaged,
+			TAG(Event.Combat.DidDamage),
+			TAG(Event.Combat.Damaged),
 			IncomingDamage,
 			&EventData);
 
@@ -80,8 +80,8 @@ void UHealthAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 		{
 			// The owner was not out of health before, but now it is
 			// Send OutOfHealth event
-			EventData.EventTag = GTag_Event_Unit_OutOfHealth;
-			GetOwningAbilitySystemComponentChecked()->HandleGameplayEvent(GTag_Event_Unit_OutOfHealth, &EventData);
+			EventData.EventTag = TAG(Event.Unit.OutOfHealth);
+			GetOwningAbilitySystemComponentChecked()->HandleGameplayEvent(EventData.EventTag, &EventData);
 		}
 
 		// Update the flag with the current health value in case the value changed due to the event
@@ -110,8 +110,8 @@ void UHealthAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 		RememberingWallace::GameplayEvent::SendEventsForAttrGEExecute(
 			&Data,
 			GetOwningAbilitySystemComponentChecked(),
-			GTag_Event_Combat_DidHeal,
-			GTag_Event_Combat_Healed,
+			TAG(Event.Combat.DidHeal),
+			TAG(Event.Combat.Healed),
 			IncomingHeal);
 
 		// Update the flag with the current value in case the value changed due to the event

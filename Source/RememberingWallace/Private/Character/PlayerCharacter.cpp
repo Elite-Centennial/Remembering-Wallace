@@ -44,7 +44,7 @@ UWallaceAbilitySystemComponent* APlayerCharacter::GetWallaceAbilitySystemCompone
 	return WallacePS ? WallacePS->GetWallaceAbilitySystemComponent() : nullptr;
 }
 
-UEquipmentManagerComponent* APlayerCharacter::GetEquipmentManagerComponent() const
+UEquipmentManagerComponent* APlayerCharacter::GetEquipmentManager() const
 {
 	const AWallacePlayerState* WallacePS = GetWallacePlayerState();
 	return WallacePS ? WallacePS->GetEquipmentManagerComponent() : nullptr;

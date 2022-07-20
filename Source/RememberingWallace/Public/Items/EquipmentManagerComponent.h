@@ -7,6 +7,7 @@
 
 #include "EquipmentManagerComponent.generated.h"
 
+enum class EWeaponState : uint8;
 class AWeaponItemActor;
 class UInventoryComponent;
 class UItemInstance;
@@ -36,6 +37,12 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Equipment|Weapon")
 	bool HasWeaponEquipped() const { return !!Weapon; }
+
+	/**
+	 * The current state of the weapon, e.g. drawn or sheathed
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Equipment|Weapon")
+	EWeaponState GetCurrentWeaponState() const;
 
 	/**
 	 * Equip the given weapon and return the one previously held

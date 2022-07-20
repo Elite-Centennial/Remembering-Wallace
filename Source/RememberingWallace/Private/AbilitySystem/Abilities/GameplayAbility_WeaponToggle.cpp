@@ -5,15 +5,10 @@
 #include "AbilitySystemComponent.h"
 #include "GameplayTagContainer.h"
 #include "ItemInstance.h"
+#include "RememberingWallaceTags.h"
 #include "Character/CharacterBase.h"
 #include "Items/EquipmentManagerComponent.h"
 #include "Items/ItemProperty_Weapon.h"
-
-DEFINE_GAMEPLAY_TAG(GTag_Ability_Action_Weapon, "Ability.Action.Weapon", TEXT("This ability changes weapon state"));
-DEFINE_GAMEPLAY_TAG(GTag_Unit_State_Weapon_Sheathed, "Unit.State.Weapon.Sheathed", TEXT("Weapon is sheathed"));
-DEFINE_GAMEPLAY_TAG(GTag_Unit_State_Weapon_Drawing, "Unit.State.Weapon.Drawing", TEXT("Weapon is being drawn out"));
-DEFINE_GAMEPLAY_TAG(GTag_Unit_State_Weapon_Drawn, "Unit.State.Weapon.Drawn", TEXT("Weapon is drawn out"));
-DEFINE_GAMEPLAY_TAG(GTag_Unit_State_Weapon_Sheathing, "Unit.State.Weapon.Sheathing", TEXT("Weapon is being sheathed"));
 
 UGameplayAbility_WeaponToggle::UGameplayAbility_WeaponToggle(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -22,10 +17,10 @@ UGameplayAbility_WeaponToggle::UGameplayAbility_WeaponToggle(const FObjectInitia
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
 	// All child classes have this tag by default
-	AbilityTags.AddTag(GTag_Ability_Action_Weapon);
+	AbilityTags.AddTag(TAG(Ability.Action.Weapon));
 
 	// Block other abilities of same type (i.e., change the weapon state)
-	BlockAbilitiesWithTag.AddTag(GTag_Ability_Action_Weapon);
+	BlockAbilitiesWithTag.AddTag(TAG(Ability.Action.Weapon));
 }
 
 bool UGameplayAbility_WeaponToggle::CanActivateAbility(
@@ -53,7 +48,7 @@ bool UGameplayAbility_WeaponToggle::CanActivateAbility(
 		return false;
 	}
 
-	const UEquipmentManagerComponent* EquipmentManager = Character->GetEquipmentManagerComponent();
+	const UEquipmentManagerComponent* EquipmentManager = Character->GetEquipmentManager();
 
 	// 2. Check if we have a weapon equipped
 	if (!EquipmentManager || !EquipmentManager->HasWeaponEquipped())
@@ -68,37 +63,34 @@ bool UGameplayAbility_WeaponToggle::CanActivateAbility(
 void UGameplayAbility_WeaponToggle::ApplyWeaponDrawnTag()
 {
 	UAbilitySystemComponent* AbilitySystemComponent = GetAbilitySystemComponentFromActorInfo_Checked();
-	AbilitySystemComponent->SetLooseGameplayTagCount(GTag_Unit_State_Weapon_Drawn, 1);
+	AbilitySystemComponent->SetLooseGameplayTagCount(TAG(Weapon.State.Drawn), 1);
 }
 
 void UGameplayAbility_WeaponToggle::RemoveWeaponDrawnTag()
 {
 	UAbilitySystemComponent* AbilitySystemComponent = GetAbilitySystemComponentFromActorInfo_Checked();
-	AbilitySystemComponent->SetLooseGameplayTagCount(GTag_Unit_State_Weapon_Drawn, 0);
+	AbilitySystemComponent->SetLooseGameplayTagCount(TAG(Weapon.State.Drawn), 0);
 }
 
-bool UGameplayAbility_WeaponToggle::GetDrawMontage(UAnimMontage*& DrawMontage) const
+const UItemProperty_Weapon* UGameplayAbility_WeaponToggle::GetCurrentWeaponProperty() const
 {
 	const UEquipmentManagerComponent* EquipmentManager = GetEquipmentManagerFromActorInfo();
 	check(EquipmentManager); // Guaranteed by CanActivateAbility override
 	const UItemInstance* CurrentWeapon = EquipmentManager->GetCurrentWeapon();
 	check(CurrentWeapon); // Guaranteed by CanActivateAbility override
-	const UItemProperty_Weapon* WeaponProperty = CurrentWeapon->GetProperty<UItemProperty_Weapon>();
+	const UItemProperty_Weapon* WeaponProperty = CurrentWeapon->GetWeaponProperty();
 	check(WeaponProperty); // Guaranteed by UEquipmentManagerComponent::EquipWeapon
+	return WeaponProperty;
+}
 
-	DrawMontage = WeaponProperty->GetDrawMontage();
+bool UGameplayAbility_WeaponToggle::GetDrawMontage(UAnimMontage*& DrawMontage) const
+{
+	DrawMontage = GetCurrentWeaponProperty()->GetDrawMontage();
 	return DrawMontage != nullptr;
 }
 
 bool UGameplayAbility_WeaponToggle::GetSheatheMontage(UAnimMontage*& SheatheMontage) const
 {
-	const UEquipmentManagerComponent* EquipmentManager = GetEquipmentManagerFromActorInfo();
-	check(EquipmentManager); // Guaranteed by CanActivateAbility override
-	const UItemInstance* CurrentWeapon = EquipmentManager->GetCurrentWeapon();
-	check(CurrentWeapon); // Guaranteed by CanActivateAbility override
-	const UItemProperty_Weapon* WeaponProperty = CurrentWeapon->GetProperty<UItemProperty_Weapon>();
-	check(WeaponProperty); // Guaranteed by UEquipmentManagerComponent::EquipWeapon
-
-	SheatheMontage = WeaponProperty->GetSheatheMontage();
+	SheatheMontage = GetCurrentWeaponProperty()->GetSheatheMontage();
 	return SheatheMontage != nullptr;
 }

@@ -65,7 +65,7 @@ UEquipmentManagerComponent* UGameplayAbilityBase::GetEquipmentManagerFromActorIn
 	{
 		if (const ACharacterBase* Character = Cast<ACharacterBase>(CurrentActorInfo->AvatarActor.Get()))
 		{
-			return Character->GetEquipmentManagerComponent();
+			return Character->GetEquipmentManager();
 		}
 	}
 

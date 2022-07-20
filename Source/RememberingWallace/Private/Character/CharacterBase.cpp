@@ -28,16 +28,6 @@ void ACharacterBase::SetFollowControllerRotation(const bool bFollowControllerRot
 	GetCharacterMovement()->bOrientRotationToMovement = !bFollowControllerRotation;
 }
 
-void ACharacterBase::HandleWeaponGrabbed()
-{
-	OnWeaponGrabbed();
-}
-
-void ACharacterBase::HandleWeaponReleased()
-{
-	OnWeaponReleased();
-}
-
 UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 {
 	return GetWallaceAbilitySystemComponent();

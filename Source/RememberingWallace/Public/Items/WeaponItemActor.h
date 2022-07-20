@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WeaponState.h"
 #include "Actors/ItemInstanceActor.h"
 
 #include "WeaponItemActor.generated.h"
@@ -52,6 +53,26 @@ public:
 	 * Return the weapon property data stored in the item instance
 	 */
 	FItemPropertyData_Weapon* GetWeaponItemPropertyData();
+
+	/**
+	 * Attach this actor to the owner character using the given position
+	 *
+	 * Returns true if attachment was successful, including the case where it was already attached at the specified
+	 * position. Returns false if not successful, mostly because the equipment manager is not valid or the owner does
+	 * not have a character actor.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Weapon|Actor")
+	bool AttachToOwnerCharacter(EWeaponState Position);
+
+	/**
+	 * Detach this actor from the owner character if already attached
+	 *
+	 * Returns true if detachment was successful, including the case where it was already detached. Returns false if not
+	 * successful, mostly because the equipment manager is not valid, the owner does not have a character actor, or the
+	 * actor was attached to something else.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Weapon|Actor")
+	bool DetachFromOwnerCharacter();
 
 protected:
 	/**
