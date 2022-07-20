@@ -18,6 +18,7 @@ public class RememberingWallace : ModuleRules
 			"GameplayTasks",
 			"GameplayAbilities",
 			"DeveloperSettings",
+			"InventorySystem",
 		});
 	}
 }

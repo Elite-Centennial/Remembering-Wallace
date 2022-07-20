@@ -3,8 +3,8 @@
 #include "AbilitySystem/Attributes/CombatAttributeSet.h"
 
 #include "GameplayEffectExtension.h"
+#include "RememberingWallaceTags.h"
 #include "AbilitySystem/GameplayEventHelper.h"
-#include "AbilitySystem/GameplayEventTags.h"
 
 UCombatAttributeSet::UCombatAttributeSet()
 	: Mana(50.0f),
@@ -37,7 +37,7 @@ void UCombatAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 			FGameplayEventData EventData;
 			RememberingWallace::GameplayEvent::GatherEventDataForAttrGEExecute(
 				&Data, Data.EvaluatedData.Magnitude, &EventData);
-			EventData.EventTag = GTag_Event_Unit_OutOfMana;
+			EventData.EventTag = TAG(Event.Unit.OutOfMana);
 			GetOwningAbilitySystemComponentChecked()->HandleGameplayEvent(EventData.EventTag, &EventData);
 		}
 

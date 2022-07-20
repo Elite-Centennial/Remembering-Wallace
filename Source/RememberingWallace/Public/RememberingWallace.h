@@ -4,4 +4,4 @@
 
 #include "CoreMinimal.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(LogWallace, Display, Display);
+DECLARE_LOG_CATEGORY_EXTERN(LogWallace, Display, All);

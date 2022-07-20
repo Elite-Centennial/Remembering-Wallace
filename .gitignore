@@ -14,6 +14,9 @@ Saved
 *.xcodeproj
 *.xcworkspace
 
+# Personal settings files for the project
+*.DotSettings.user
+
 # RiderLink
 /Plugins/Developer/RiderLink
 

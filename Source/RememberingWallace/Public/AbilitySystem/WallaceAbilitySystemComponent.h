@@ -16,5 +16,14 @@ class REMEMBERINGWALLACE_API UWallaceAbilitySystemComponent : public UAbilitySys
 	GENERATED_BODY()
 
 public:
+	/**
+	 * Constructor
+	 */
 	UWallaceAbilitySystemComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	// BEGIN UAbilitySystemComponent interface
+	virtual void BindToInputComponent(UInputComponent* InputComponent) override;
+	virtual void AbilityLocalInputPressed(int32 InputID) override;
+	virtual void AbilityLocalInputReleased(int32 InputID) override;
+	// END UAbilitySystemComponent interface
 };

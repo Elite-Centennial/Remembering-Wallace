@@ -3,44 +3,32 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemInterface.h"
+#include "InventorySystemInterface.h"
 #include "GameFramework/Character.h"
 
 #include "CharacterBase.generated.h"
 
 class ACharacterBase;
 class UCharacterBaseMovementComponent;
-
-/**
- * Event dispatcher for when weapon draw is requested
- */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterWeaponDrawRequested, const ACharacterBase*, Character);
-
-/**
- * Event dispatcher for when weapon sheathe is requested
- */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterWeaponSheatheRequested, const ACharacterBase*, Character);
-
-UENUM(BlueprintType, Category = "Weapon")
-enum class ECharacterWeaponState : uint8
-{
-	Sheathed,
-	Drawn,
-	Drawing,
-	Sheathing
-};
+class UEquipmentManagerComponent;
+class UWallaceAbilitySystemComponent;
 
 /**
  * Abstract base character class for all character classes
  *
- * This class mostly consists of common functionalities such as combat. Child classes must implement InitASCActorInfo
- * method.
+ * This class mostly consists of common functionalities such as the custom character movement component.
  */
 UCLASS(Abstract)
-class REMEMBERINGWALLACE_API ACharacterBase : public ACharacter
+class REMEMBERINGWALLACE_API ACharacterBase
+	: public ACharacter, public IAbilitySystemInterface, public IInventorySystemInterface
 {
 	GENERATED_BODY()
 
 public:
+	/**
+	 * Constructor
+	 */
 	ACharacterBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	/**
@@ -50,107 +38,24 @@ public:
 	UCharacterBaseMovementComponent* GetCharacterBaseMovement() const;
 
 	/**
-	 * Return the weapon state
+	 * Return the ASC of this unit as the customized type for this project
 	 */
-	FORCEINLINE ECharacterWeaponState GetWeaponState() const { return WeaponState; }
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "AbilitySystem")
+	virtual UWallaceAbilitySystemComponent* GetWallaceAbilitySystemComponent() const { return nullptr; }
 
 	/**
-	 * Return the delegate for when weapon draw is successfully requested
+	 * Return the equipment manager of this unit
 	 */
-	FORCEINLINE FCharacterWeaponDrawRequested& OnWeaponDrawRequested() { return WeaponDrawRequestedDelegate; }
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Equipment")
+	virtual UEquipmentManagerComponent* GetEquipmentManager() const { return nullptr; }
 
 	/**
-	 * Return the delegate for when weapon sheathe is successfully requested
+	 * Set if the character should have its rotation follow the controller's rotation
 	 */
-	FORCEINLINE FCharacterWeaponSheatheRequested& OnWeaponSheathRequested() { return WeaponSheatheRequestedDelegate; }
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	void SetFollowControllerRotation(bool bFollowControllerRotation);
 
-	/**
-	 * Handle the event where the weapon is grabbed while drawing it out
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void HandleWeaponGrabbed();
-
-	/**
-	 * Handle the event where the weapon is released while sheathing it
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void HandleWeaponReleased();
-
-	/**
-	 * Handle the event where transition from sheathed to drawn is finished
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void HandleWeaponDrawingFinished();
-
-	/**
-	 * Handle the event where transition from drawn to sheathed is finished
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void HandleWeaponSheathingFinished();
-
-	// BEGIN APawn interface
-	virtual void PossessedBy(AController* NewController) override;
-	// END APawn interface
-
-protected:
-	/**
-	 * Request to start drawing the weapon
-	 *
-	 * This signals `WeaponDrawRequestedDelegate` only if the weapon state is `Sheathed`.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Weapon", meta = (BlueprintProtected = "true"))
-	void RequestWeaponDraw();
-
-	/**
-	 * Request to start sheathing the weapon
-	 *
-	 * This signals `WeaponSheatheRequestedDelegate` only if the weapon state is `Drawn`.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Weapon", meta = (BlueprintProtected = "true"))
-	void RequestWeaponSheath();
-
-	/**
-	 * Called when the weapon should be grabbed while drawing it out
-	 */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
-	void OnWeaponGrabbed();
-
-	/**
-	* Called when the weapon should be release while sheathing it
-	 */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
-	void OnWeaponReleased();
-
-	/**
-	 * Initialize the associated ASC with the actor info
-	 *
-	 * This must be implemented by child classes since this class does not have any knowledge about how to access the
-	 * ASC.
-	 */
-	virtual void InitASCActorInfo() {}
-
-private:
-	/**
-	 * State of the weapon (drawn, sheathed, or in transition)
-	 */
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-	ECharacterWeaponState WeaponState;
-
-	/**
-	 * Event for when a request to draw the weapon is successfully made
-	 *
-	 * This is intended to be bound with a function that plays an animation montage.
-	 */
-	UPROPERTY(BlueprintAssignable, Category = "Weapon", DisplayName = "On Weapon Draw Requested",
-		meta = (AllowPrivateAccess = "true"))
-	FCharacterWeaponDrawRequested WeaponDrawRequestedDelegate;
-
-	/**
-	 * Event for when a request to sheathe the weapon is successfully made
-	 *
-	 * This is intended to be bound with a function that plays an animation montage.
-	 */
-	UPROPERTY(BlueprintAssignable, Category = "Weapon", DisplayName = "On Weapon Sheathe Requested",
-		meta = (AllowPrivateAccess = "true"))
-	FCharacterWeaponSheatheRequested WeaponSheatheRequestedDelegate;
+	// BEGIN IAbilitySystemInterface interface
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	// END IAbilitySystemInterface interface
 };

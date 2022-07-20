@@ -42,15 +42,15 @@ public:
 	/**
 	 * Return the contained property of the specified type
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item", DisplayName = "Get Item Property",
-		meta = (DeterminesOutputType = "PropertyClass"))
-	const UItemProperty* GetProperty(TSubclassOf<UItemProperty> PropertyClass) const;
+	template<class T>
+	const T* GetProperty() const;
 
 	/**
 	 * Return the contained property of the specified type
 	 */
-	template<class T>
-	const T* GetProperty() const { return Cast<T>(GetProperty(T::StaticClass())); }
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item", DisplayName = "Get Item Property",
+		meta = (DeterminesOutputType = "PropertyClass"))
+	const UItemProperty* GetProperty(TSubclassOf<UItemProperty> PropertyClass) const;
 
 	/**
 	 * Return a non-mutable reference to the properties
@@ -60,6 +60,7 @@ public:
 	/**
 	 * Return the maximum number of amount the item can be stacked in one inventory slot
 	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory|Stack")
 	int64 GetMaxStackCount() const;
 
 protected:
@@ -84,3 +85,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties", Instanced)
 	TArray<TObjectPtr<UItemProperty>> Properties;
 };
+
+template<class T>
+const T* UItemDefinition::GetProperty() const
+{
+	return CastChecked<T>(GetProperty(T::StaticClass()), ECastCheckedType::NullAllowed);
+}

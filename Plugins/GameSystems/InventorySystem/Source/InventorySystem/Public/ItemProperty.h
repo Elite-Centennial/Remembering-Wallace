@@ -58,8 +58,11 @@ public:
  *
  * To define a new struct type to store item instance data, GetScriptStruct method MUST be overriden to return the
  * appropriate value.
+ *
+ * Any object pointers MUST be of type TWeakObjectPtr. Any raw pointers or TObjectPtr's, even if marked as UPROPERTY,
+ * will either NOT be properly tracked (and allow access to bad/corrupted memory) or keep the objects from being garbage
+ * collected (and cause memory leaks).
  */
-// TODO: Change FItemPropertyData to UObject?
 USTRUCT(BlueprintType)
 struct INVENTORYSYSTEM_API FItemPropertyData
 {

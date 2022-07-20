@@ -4,12 +4,10 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
+#include "RememberingWallaceTags.h"
 #include "Components/CapsuleComponent.h"
 #include "Development/DeveloperSettings_Characters.h"
 #include "GameFramework/Character.h"
-
-DEFINE_GAMEPLAY_TAG(GTag_Unit_State_Immobilized, "Unit.State.Immobilized",
-	TEXT("Movement is prohibited in this state"));
 
 UCharacterBaseMovementComponent::UCharacterBaseMovementComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -97,7 +95,7 @@ FRotator UCharacterBaseMovementComponent::GetDeltaRotation(const float DeltaTime
 	// Return zero if the owning actor has the immobilized tag
 	if (const UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(GetOwner()))
 	{
-		if (ASC->HasMatchingGameplayTag(GTag_Unit_State_Immobilized))
+		if (ASC->HasMatchingGameplayTag(TAG(Unit.State.Immobilized)))
 		{
 			return FRotator::ZeroRotator;
 		}
@@ -111,7 +109,7 @@ float UCharacterBaseMovementComponent::GetMaxSpeed() const
 	// Return zero if the owning actor has the immobilized tag
 	if (const UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(GetOwner()))
 	{
-		if (ASC->HasMatchingGameplayTag(GTag_Unit_State_Immobilized))
+		if (ASC->HasMatchingGameplayTag(TAG(Unit.State.Immobilized)))
 		{
 			return 0.0f;
 		}

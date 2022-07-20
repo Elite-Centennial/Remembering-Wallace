@@ -3,6 +3,7 @@
 #include "AbilitySystem/AbilitySet.h"
 
 #include "RememberingWallace.h"
+#include "AbilitySystem/AbilityInputID.h"
 #include "AbilitySystem/WallaceAbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/AttributeSetBase.h"
 
@@ -81,6 +82,9 @@ void FAbilitySetGrantedHandles::Clear()
 	AbilitySystemComponent.Reset();
 }
 
+// TODO: Add more options to UAbilitySet::Grant so that we can specify detailed context of what is granting this set
+//       E.g., equipping a weapon or an armor can apply gameplay effects, and we can specify the effect causer in the
+//       gameplay effect context when applying the effects.
 bool UAbilitySet::Grant(
 	UWallaceAbilitySystemComponent* AbilitySystemComponent,
 	FAbilitySetGrantedHandles* OutHandles) const
@@ -92,11 +96,17 @@ bool UAbilitySet::Grant(
 	{
 		if (const UWallaceAbilitySystemComponent* HandleASC = OutHandles->GetAbilitySystemComponent())
 		{
+			// The saved ASC is valid; check if it equals the target ASC
 			if (HandleASC != AbilitySystemComponent)
 			{
 				// Different ASCs; abort
 				return false;
 			}
+		}
+		else
+		{
+			// The saved ASC is invalid; clear all saved handles before proceeding
+			OutHandles->Clear();
 		}
 	}
 
@@ -164,8 +174,13 @@ bool UAbilitySet::Grant(
 			continue;
 		}
 
-		const FGameplayAbilitySpecHandle Handle =
-			AbilitySystemComponent->K2_GiveAbility(AbilityToGrant.GameplayAbility, AbilityToGrant.AbilityLevel);
+		// Input ID should be set to the default value of -1 if the ability is not bound to any input
+		const int32 InputID = AbilityToGrant.InputID == EAbilityInputID::None
+			? INDEX_NONE
+			: static_cast<uint8>(AbilityToGrant.InputID);
+
+		const FGameplayAbilitySpecHandle Handle = AbilitySystemComponent->K2_GiveAbility(
+			AbilityToGrant.GameplayAbility, AbilityToGrant.AbilityLevel, InputID);
 
 		// Add to the handles set if provided
 		if (OutHandles)

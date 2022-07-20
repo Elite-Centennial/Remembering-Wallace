@@ -59,6 +59,41 @@ public:
 	const UItemDefinition* GetDefinition() const { return Definition; }
 
 	/**
+	 * Return the item property contained in the item definition of the specified type
+	 *
+	 * This is a simple wrapper to calling ItemInstance->GetDefinition()->GetProperty<PropertyClass>().
+	 */
+	template<class T>
+	const T* GetProperty() const;
+
+	/**
+	 * Return the item property contained in the item definition of the specified type
+	 *
+	 * This is a simple wrapper to calling ItemInstance->GetDefinition()->GetProperty(PropertyClass).
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item", DisplayName = "Get Item Property",
+		meta = (DeterminesOutputType = "PropertyClass"))
+	const UItemProperty* GetProperty(TSubclassOf<UItemProperty> PropertyClass) const;
+
+	/**
+	 * Return the instance data for the given property class
+	 *
+	 * Do not persist the returned pointer. The memory might be reallocated or freed throughout the lifetime of the
+	 * object instance.
+	 */
+	template<class T>
+	const typename T::FDataType* GetPropertyData() const;
+
+	/**
+	 * Return the instance data for the given property class
+	 *
+	 * Do not persist the returned pointer. The memory might be reallocated or freed throughout the lifetime of the
+	 * object instance.
+	 */
+	template<class T>
+	typename T::FDataType* GetPropertyData();
+
+	/**
 	 * Return the instance data for the given property class
 	 *
 	 * Do not persist the returned pointer. The memory might be reallocated or freed throughout the lifetime of the
@@ -75,46 +110,30 @@ public:
 	FItemPropertyData* GetPropertyData(TSubclassOf<UItemProperty> PropertyClass);
 
 	/**
-	 * Return the instance data for the given property class
-	 */
-	template<class T>
-	const typename T::FDataType* GetPropertyData() const
-	{
-		return static_cast<const typename T::FDataType*>(GetPropertyData(T::StaticClass()));
-	}
-
-	/**
-	 * Return the instance data for the given property class
-	 */
-	template<class T>
-	typename T::FDataType* GetPropertyData()
-	{
-		return static_cast<typename T::FDataType*>(GetPropertyData(T::StaticClass()));
-	}
-
-	/**
 	 * Utility method that returns maximum stack count stored in the property data
 	 *
 	 * If stacking is not supported, this returns 1.
 	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory|Stack")
 	int64 GetMaxStackCount() const;
 
 	/**
 	 * Whether this instance can be stacked with the given instance
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory|Stack")
 	bool CanStackWith(const UItemInstance* Other) const;
 
 	/**
 	 * Whether this instance can stack with a default new instance for the given item definition
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory|Stack")
 	bool CanStackDefinition(const UItemDefinition* OtherDefinition) const;
 
 protected:
 	/**
 	 * Item definition associated with this instance
 	 */
+	// TODO: Change to const pointer
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Item")
 	TObjectPtr<UItemDefinition> Definition;
 
@@ -124,6 +143,7 @@ protected:
 	 * The key is the name of the property class. The values are initialized by the method
 	 * UItemProperty::CreateNewDataInstance.
 	 */
+	// TODO: Change this to a "handle" pattern which GAS uses a lot; this will allow easier integration with blueprint
 	TMap<FName, TUniquePtr<FItemPropertyData>> InstanceData;
 
 private:
@@ -140,3 +160,31 @@ private:
 	 */
 	void InitializeFromInstanceInit(const FItemInstanceInit& InstanceInit);
 };
+
+template<class T>
+const T* UItemInstance::GetProperty() const
+{
+	return CastChecked<T>(GetProperty(T::StaticClass()), ECastCheckedType::NullAllowed);
+}
+
+template<class T>
+const typename T::FDataType* UItemInstance::GetPropertyData() const
+{
+	const FItemPropertyData* Data = GetPropertyData(T::StaticClass());
+	if (Data)
+	{
+		check(Data->GetScriptStruct() == T::FDataType::StaticStruct());
+	}
+	return static_cast<const typename T::FDataType*>(Data);
+}
+
+template<class T>
+typename T::FDataType* UItemInstance::GetPropertyData()
+{
+	FItemPropertyData* Data = GetPropertyData(T::StaticClass());
+	if (Data)
+	{
+		check(Data->GetScriptStruct() == T::FDataType::StaticStruct());
+	}
+	return static_cast<typename T::FDataType*>(Data);
+}
